@@ -1,0 +1,20 @@
+#Temporary files
+*.java~
+
+#OS files
+*.DS_Store
+*.DS_Store?
+*.Trashes
+*ehthumbs.db
+*Thumbs.db
+
+#Executable
+*.class
+*.mex*
+
+
+*.xml
+1 - Project 1.iml
+out/*
+sequence.out
+.idea/*

@@ -1,0 +1,23 @@
+Michael: pairing up all soulmates is a good idea until there are too many people where minimum score is determined by unmatched players
+
+Zeynap: minimize time spent moving. move paired soulmates out of the way since the time they spend moving is compensated by the enjoyment rate
+
+read literature on square dancing. apparently they have people move in actual inner/outer circles/squares
+
+Bruce: dance effcienty: can start by using inner/outer circle rotation for 2 consecutive minutes each time so that everyone enjoys all of his/her time dancing
+
+Tian: if you are in the same circle as your soulmate, you won't ever meet your soulmate
+
+Chengyu: can do a "snaking" solution with irregular shapes to create more surface area for matching
+
+Michael: snaking solution is done in actual real life square dancing. Removing soulmates from the rotation might be detrimental to the players left in the circle at the end who have not found their soulmates
+
+should be able to handle d on the order of 1000
+
+Bruce: initial positioning is very important because there is no opportunity cost to place dancers at arbitrary locations
+
+Kailash: unless everyone finds his/her soulmate, it doesn't necessarily help
+
+David: having people leave the rotation means filling in the gaps takes more time
+
+Frank: matched soulmates should move around and help other dancers until near the end, then get matched up to catch their score up, since they are not in danger of being the lowest scoring dancers
