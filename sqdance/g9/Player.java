@@ -10,7 +10,7 @@ import java.util.Random;
 
 public class Player implements sqdance.sim.Player {
 
-    private static final boolean DEBUG = true;
+    private static final boolean DEBUG = false;
     private final double cell_range = 0.002;
     private final double grid_length = 0.5 + 3 * cell_range;
     private Point[][] grid;
@@ -213,7 +213,7 @@ public class Player implements sqdance.sim.Player {
         int x = 0, y = 0;
         round_table = new Point[n][2];
 
-        for (int round = 0; round < n; ++ round) {
+        for (int round = n-1; round >= 0; -- round) {
             vis[x][y] = true;
 
             round_table[round][0] = new Point(grid[x][y].x - cell_range * dx, grid[x][y].y - cell_range * dy);
@@ -237,7 +237,6 @@ public class Player implements sqdance.sim.Player {
                 System.out.println("Round " + round + ": (" + round_table[round][0].x + "," + round_table[round][0].y + ")");
                 System.out.println("Round " + round + ": (" + round_table[round][1].x + "," + round_table[round][1].y + ")");
             }
-
         }
     }
 
