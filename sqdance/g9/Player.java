@@ -7,10 +7,11 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Random;
+import java.util.Arrays;
 
 public class Player implements sqdance.sim.Player {
 
-    private final boolean DEBUG = true;
+    private final boolean DEBUG = false;
     private final int MIN_THRESHOLD = 0, STRANGER_THRESHOLD = 1200, CRAMPED_THRESHOLD = 1600, MAX_THRESHOLD = 40000;
 
     private final double cell_range = 0.002;
@@ -131,7 +132,6 @@ public class Player implements sqdance.sim.Player {
     // partner_ids: index of the current dance partner. -1 if no dance partner
     // enjoyment_gained: integer amount (-5,0,3,4, or 6) of enjoyment gained in the most recent 6-second interval
     public Point[] play(Point[] dancers, int[] scores, int[] partner_ids, int[] enjoyment_gained) {
-
         Point[] instructions = new Point[d];
 
         //Default move: stay chill
@@ -159,7 +159,7 @@ public class Player implements sqdance.sim.Player {
             List<Integer> friendsFound = new ArrayList<>();
             for (int i = permutation; i + 1 < round_table_list.size(); i += 2) {
                 int l = round_table_list.get(i);
-                int r = round_table_list.get(i + 1);
+                int r = round_table_list.get(i+1);
 
                 if (enjoyment_gained[l] == 6) {
                     // Soul mate found!
@@ -188,32 +188,34 @@ public class Player implements sqdance.sim.Player {
             int newd = round_table_list.size() - soulmatesFound.size() - friendsFound.size();
 
             if (soulmatesFound.size() > 0) {
-                Collections.reverse(soulmatesFound);
+                //Collections.reverse(soulmatesFound);
                 for (int i = 0; i < soulmatesFound.size(); i += 2) {
                     // For each pair of soul mates, find a suitable place for them
                     int l = soulmatesFound.get(i), r = soulmatesFound.get(i + 1);
                     in_round_table[l] = in_round_table[r] = false;
                     int dst = -1;
-                    for (int p = newd; p < round_table.length; p += 2) {
+                    for (int p = 0; p < round_table.length-newd; p += 2) {
                         if (occupied[p] || occupied[p + 1]) continue;
                         double dd = distance(dancers[l], round_table[p][1]);
-                        if (dst == -1 || dd < distance(dancers[l], round_table[dst][1]))
+                        if (dst == -1 || dd > distance(dancers[l], round_table[dst][1]))
                             dst = p;
                     }
                     target[l] = round_table[dst][1];
                     target[r] = round_table[dst + 1][0];
                     occupied[dst] = occupied[dst + 1] = true;
                 }
-
+            }
+            if (friendsFound.size() > 0) {
                 for (int i = 0; i < friendsFound.size(); i+=2) {
-                    // For each pair of soul mates, find a suitable place for them
+                    // For each pair of friends, find a suitable place for them
                     int l = friendsFound.get(i), r = friendsFound.get(i + 1);
                     in_round_table[l] = in_round_table[r] = false;
                     int dst = -1;
-                    for (int p = newd; p < round_table.length; p += 2) {
+                    //for (int p = newd; p < round_table.length; p += 2) {
+                    for (int p = 0; p < round_table.length-oldd; p++) {
                         if (occupied[p] || occupied[p + 1]) continue;
                         double dd = distance(dancers[l], round_table[p][1]);
-                        if (dst == -1 || dd < distance(dancers[l], round_table[dst][1]))
+                        if (dst == -1 || dd > distance(dancers[l], round_table[dst][1]))
                             dst = p;
                     }
                     target[l] = round_table[dst][1];
@@ -227,14 +229,15 @@ public class Player implements sqdance.sim.Player {
 
             // Apply a permutation
             for (int i = permutation; i + 1 < round_table_list.size(); i += 2) {
+                int index = round_table.length - i - 1;
                 int l = round_table_list.get(i);
                 int r = round_table_list.get(i + 1);
 
                 int tmp = position[l]; position[l] = position[r]; position[r] = tmp;
 
 
-                target[l] = round_table[i + 1][1];
-                target[r] = round_table[i][0];
+                target[l] = round_table[index][1];
+                target[r] = round_table[index-1][0];
 
                 round_table_list.set(i + 1, l);
                 round_table_list.set(i, r);
