@@ -10,11 +10,13 @@ import java.util.Random;
 
 public class Player implements sqdance.sim.Player {
 
-    private static final boolean DEBUG = true;
+    private final boolean DEBUG = true;
+    private final int MIN_THRESHOLD = 0, STRANGER_THRESHOLD = 1200, CRAMPED_THRESHOLD = 1600, MAX_THRESHOLD = 40000;
+
     private final double cell_range = 0.002;
     private final double grid_length = 0.5 + 3 * cell_range;
     private Point[][] grid;
-    private int grid_size = 19;
+    private int grid_size = 20;
     // Indicate whether a cell is occupied
     private boolean[] occupied;
 
@@ -72,6 +74,14 @@ public class Player implements sqdance.sim.Player {
     // note the dance caller does not know any player-player relationships, so order doesn't really matter in the Point[] you return. Just make sure your player is consistent with the indexing
 
     public Point[] generate_starting_locations() {
+        if(MIN_THRESHOLD <= d && d <= CRAMPED_THRESHOLD) {
+            return generate_starting_locations_default();
+        } else {
+            return generate_starting_locations_cramped();
+        }
+    }
+
+    public Point[] generate_starting_locations_default() {
         Point[] L  = new Point [d];
         for (int i = 0 ; i < d ; ++i) {
             L[i] = round_table[i][1 - (i % 2)];
@@ -80,6 +90,38 @@ public class Player implements sqdance.sim.Player {
             round_table_list.add(i);
             in_round_table[i] = true;
         }
+        return L;
+    }
+
+    public Point[] generate_starting_locations_cramped() {
+        Point[] L = new Point[d];
+
+        double x = 0, y = 0;
+        double dx = 0.66, dy = 0.66;
+        double offset = 0;
+        double yoffset = 0;
+        double inc = 0.11;
+
+        for(int i = 0; i < d; ++i) {
+            if(y > 20) {
+                if(offset >= 0.66) {
+                    offset = 0;
+                    yoffset += inc;
+                } else {
+                    offset += inc;
+                }
+                x = offset;
+                y = yoffset;
+            } else if(x > 20) {
+                x = offset;
+                y += dy;
+            }
+
+            L[i] = new Point(x, y);
+
+            x += dx;
+        }
+
         return L;
     }
 
@@ -96,6 +138,9 @@ public class Player implements sqdance.sim.Player {
         for (int i = 0; i < d; ++ i)
             instructions[i] = new Point(0, 0);
 
+        if(d > CRAMPED_THRESHOLD)
+            return instructions;
+
         if (mode == 0) {
             // Move round
             boolean finished = true;
@@ -104,36 +149,49 @@ public class Player implements sqdance.sim.Player {
                 if (in_round_table[i]) finished = false;
                 //instructions[i] = direction(subtract(target[i], dancers[i]));
 
-                //System.err.println("Player " + i + " moving from (" + dancers[i].x + "," + dancers[i].y + ") to (" + target[i].x + "," + target[i].y + ")");
+                if(DEBUG)
+                    System.err.println("Player " + i + " moving from (" + dancers[i].x + "," + dancers[i].y + ") to (" + target[i].x + "," + target[i].y + ")");
             }
             if (finished) mode = 1;
         } else {
             // Detection
-            List<Integer> found = new ArrayList<>();
+            List<Integer> soulmatesFound = new ArrayList<>();
+            List<Integer> friendsFound = new ArrayList<>();
             for (int i = permutation; i + 1 < round_table_list.size(); i += 2) {
                 int l = round_table_list.get(i);
                 int r = round_table_list.get(i + 1);
 
-				/*if (partner_ids[l] != r) {
-					// Assessment
-					System.err.println("Fatal: " + l + " isn't dancing with " + r);
-					return null;
-				}*/
-
                 if (enjoyment_gained[l] == 6) {
                     // Soul mate found!
-                    found.add(l); found.add(r);
+                    soulmatesFound.add(l);
+                    soulmatesFound.add(r);
+                } else if (enjoyment_gained[1] == 4) {
+                    // Friend found
+                    friendsFound.add(l);
+                    friendsFound.add(r);
+                } else if (enjoyment_gained[1] == 0) {
+                    try {
+                        Integer l_check = round_table_list.get(l);
+                        Integer r_check = round_table_list.get(r);
+                        if (l_check == null)
+                            round_table_list.add(l);
+                        if (r_check == null)
+                            round_table_list.add(r);
+                    } catch(IndexOutOfBoundsException e) {
+                        round_table_list.add(l);
+                        round_table_list.add(r);
+                    }
                 }
             }
 
             int oldd = round_table_list.size();
-            int newd = round_table_list.size() - found.size();
+            int newd = round_table_list.size() - soulmatesFound.size() - friendsFound.size();
 
-            if (found.size() > 0) {
-                Collections.reverse(found);
-                for (int i = 0; i < found.size(); i += 2) {
+            if (soulmatesFound.size() > 0) {
+                Collections.reverse(soulmatesFound);
+                for (int i = 0; i < soulmatesFound.size(); i += 2) {
                     // For each pair of soul mates, find a suitable place for them
-                    int l = found.get(i), r = found.get(i + 1);
+                    int l = soulmatesFound.get(i), r = soulmatesFound.get(i + 1);
                     in_round_table[l] = in_round_table[r] = false;
                     int dst = -1;
                     for (int p = newd; p < round_table.length; p += 2) {
@@ -147,7 +205,24 @@ public class Player implements sqdance.sim.Player {
                     occupied[dst] = occupied[dst + 1] = true;
                 }
 
-                round_table_list.removeAll(found);
+                for (int i = 0; i < friendsFound.size(); i+=2) {
+                    // For each pair of soul mates, find a suitable place for them
+                    int l = friendsFound.get(i), r = friendsFound.get(i + 1);
+                    in_round_table[l] = in_round_table[r] = false;
+                    int dst = -1;
+                    for (int p = newd; p < round_table.length; p += 2) {
+                        if (occupied[p] || occupied[p + 1]) continue;
+                        double dd = distance(dancers[l], round_table[p][1]);
+                        if (dst == -1 || dd < distance(dancers[l], round_table[dst][1]))
+                            dst = p;
+                    }
+                    target[l] = round_table[dst][1];
+                    target[r] = round_table[dst + 1][0];
+                    occupied[dst] = occupied[dst + 1] = true;
+                }
+
+                round_table_list.removeAll(soulmatesFound);
+                round_table_list.removeAll(friendsFound);
             }
 
             // Apply a permutation
@@ -157,7 +232,6 @@ public class Player implements sqdance.sim.Player {
 
                 int tmp = position[l]; position[l] = position[r]; position[r] = tmp;
 
-                //System.err.println("Swapping " + l + " " + r);
 
                 target[l] = round_table[i + 1][1];
                 target[r] = round_table[i][0];
