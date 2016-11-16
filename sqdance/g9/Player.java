@@ -10,7 +10,7 @@ import java.util.Random;
 
 public class Player implements sqdance.sim.Player {
 
-    private final boolean DEBUG = true;
+    private final boolean DEBUG = false;
     private final int MIN_THRESHOLD = 0, STRANGER_THRESHOLD = 1200, CRAMPED_THRESHOLD = 1600, MAX_THRESHOLD = 40000;
 
     private final double cell_range = 0.002;
@@ -240,7 +240,7 @@ public class Player implements sqdance.sim.Player {
                 round_table_list.set(i, r);
             }
 
-            if (permutation == 1 && newd > 0) {
+            if (permutation == 1 && newd > 0 && round_table_list.size() >= newd) {
                 int i = round_table_list.get(newd - 1);
                 target[i] = round_table[newd - 1][0];
                 position[i] = newd - 1;
