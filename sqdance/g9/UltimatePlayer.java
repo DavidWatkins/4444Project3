@@ -30,6 +30,7 @@ public class UltimatePlayer implements Player {
 		// TODO Auto-generated method stub
 		this.d = d;
 		this.room_side = room_side;
+
 		this.danceTable = new LinkedList<>();
 		this.playerAtPosition = new int[d];
 		this.posOfPlayer = new int[d];
@@ -72,7 +73,7 @@ public class UltimatePlayer implements Player {
 		// move
 		if (timer > 0 && timer % THRESHOLD == 0) {
 			for (int i = 0; i < dancers.length; i++) {
-				int nextPos = (posOfPlayer[i] + 1) % danceTable.size();
+				int nextPos = (posOfPlayer[i] + 3) % danceTable.size();
 				posOfPlayer[i] = nextPos;
 				Point target = danceTable.get(nextPos);
 				instructions[i] = direction(subtract(target, dancers[i]));
