@@ -1,6 +1,7 @@
 package sqdance.g9;
 
 import sqdance.sim.Point;
+import sqdance.g6.Utils;
 
 import java.io.*;
 import java.util.*;
@@ -10,12 +11,10 @@ import java.util.*;
 
 public class RoundTableGreedyPlayer implements sqdance.sim.Player {
 
-	private final double cell_range = 0.002;
-	private final double grid_length = 0.5 + 3 * cell_range;
-	private Point[][] grid;
-	private int grid_size = 19;
+	private final double fluctuation = 0.001;
+	private final double grid_length = 0.5;
 	// Indicate whether a cell is occupied
-	private boolean[] occupied;
+	private int[] occupier;
 
 	private Point[][] round_table;
 
@@ -50,17 +49,13 @@ public class RoundTableGreedyPlayer implements sqdance.sim.Player {
     public void init(int d, int room_side) {
 		this.d = d;
 		this.room_side = (double) room_side;
-		draw_grid();
-		generate_round_table();
+
+		round_table = Utils.generate_round_table((double)room_side, (double)room_side, grid_length, fluctuation);
 
 		random = new Random();
-		E = new int [d][d];
-		occupied = new boolean[round_table.length];
-		for (int i = 0; i < d; ++ i) {
-			for (int j = 0; j < d; ++ j) {
-				E[i][j] = i == j ? 0 : -1;
-			}
-		}
+		occupier = new int[round_table.length];
+		for (int i = 0; i < round_table.length; ++ i)
+			occupier[i] = -1;
 
 		in_round_table = new boolean[d];
 		target = new Point[d];
@@ -97,12 +92,12 @@ public class RoundTableGreedyPlayer implements sqdance.sim.Player {
 			instructions[i] = new Point(0, 0);
 		
 		//dance two minutes then apply permutation 
-		if(timer>0&&timer%20==0){
+		if(timer > 0 && timer % 20==0){
 			for (int i = permutation; i + 1 < round_table_list.size(); i += 2) {
 				int l = round_table_list.get(i);
 				int r = round_table_list.get(i + 1);
-				int tmp = position[l]; position[l] = position[r]; position[r] = tmp;
 				//System.err.println("Swapping " + l + " " + r);
+				position[l] = i + 1; position[r] = i;
 
 				target[l] = round_table[i + 1][1];
 				target[r] = round_table[i][0];
@@ -122,78 +117,9 @@ public class RoundTableGreedyPlayer implements sqdance.sim.Player {
 		timer++;
 		// Move towards the target
 		for (int i = 0; i < d; ++ i)
-			instructions[i] = direction(subtract(target[i], dancers[i]));
+			instructions[i] = Utils.getDirection(target[i], dancers[i]);
 
 		return instructions;
-	}
-    
-    private int total_enjoyment(int enjoyment_gained) {
-		switch (enjoyment_gained) {
-			case 3: return 60; // stranger
-			case 4: return 200; // friend
-			case 6: return 10800; // soulmate
-			default: throw new IllegalArgumentException("Not dancing with anyone...");
-		}	
-    }
-
-	private void draw_grid() {
-		grid_size = (int)(room_side / grid_length);
-		grid = new Point[grid_size][grid_size];
-		double offset = 0.5 * (room_side - grid_length * grid_size);
-
-		for (int i = 0; i < grid_size; ++ i)
-			for (int j = 0; j < grid_size; ++ j)
-				grid[i][j] = new Point(offset + grid_length * i, offset + grid_length * j);
-	}
-
-	private void generate_round_table() {
-		int n = grid_size * grid_size;
-		if (n % 2 == 1) n -= 1;
-
-		boolean[][] vis = new boolean[grid_size][grid_size];
-		int dx = 1, dy = 0;
-		int x = 0, y = 0;
-		round_table = new Point[n][2];
-
-		for (int round = 0; round < n; ++ round) {
-			vis[x][y] = true;
-
-			round_table[round][0] = new Point(grid[x][y].x - cell_range * dx, grid[x][y].y - cell_range * dy);
-
-			// Turn
-			if (dx == 1 && (x + dx >= grid_size || vis[x + dx][y + dy])) {
-				dx = 0; dy = 1;
-			} else if (dx == -1 && (x + dx < 0 || vis[x + dx][y + dy])) {
-				dx = 0; dy = -1;
-			} else if (dy == 1 && (y + dy >= grid_size || vis[x + dx][y + dy])) {
-				dx = -1; dy = 0;
-			} else if (dy == -1 && (y + dy < 0 || vis[x + dx][y + dy])) {
-				dx = 1; dy = 0;
-			}
-			x += dx; y += dy;
-
-			round_table[round][1] = new Point(grid[x - dx][y - dy].x + cell_range * dx, grid[x - dx][y - dy].y + cell_range * dy);
-
-			/*
-			System.out.println("Round " + round + ": (" + x + "," + y + ")");
-			System.out.println("Round " + round + ": (" + round_table[round][0].x + "," + round_table[round][0].y + ")");
-			System.out.println("Round " + round + ": (" + round_table[round][1].x + "," + round_table[round][1].y + ")");
-			*/
-		}
-	}
-
-	private Point subtract(Point a, Point b) {
-		return new Point(a.x - b.x, a.y - b.y);
-	}
-
-	private double distance(Point a, Point b) {
-		return Math.hypot(a.x - b.x, a.y - b.y);
-	}
-
-	private Point direction(Point a) {
-		double l = Math.hypot(a.x, a.y);
-		if (l <= 1 + 1e-8) return a;
-		else return new Point(a.x / l, a.y / l);
 	}
 }
 
