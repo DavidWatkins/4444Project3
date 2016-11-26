@@ -154,7 +154,7 @@ public class ZigZagStrategyMedium implements Strategy {
     	}
     	++f_est_turns;
     	f_est = (int)((f_est_pairs/(double)f_est_turns) * (d-1) / (double)d + 0.5);
-    	System.out.println("f est" + f_est);
+    	//System.out.println("f est" + f_est);
     }
     //increment current turn after everyone is done dancing with strangers/friends
     //for medium d
@@ -163,8 +163,8 @@ public class ZigZagStrategyMedium implements Strategy {
 	public Point[] play(Point[] dancers, int[] scores,
 			int[] partner_ids, int[] enjoyment_gained,
 			int[] soulmate, int current_turn) {
-    	System.out.println("turn, fake turn " +current_turn + " " +
-			fake_cur_turn);
+    	//System.out.println("turn, fake turn " +current_turn + " " +
+			//fake_cur_turn);
     	int d; // = Player.d;
         assert(Player.d == dancers.length);
         d = dancers.length;
@@ -189,7 +189,7 @@ public class ZigZagStrategyMedium implements Strategy {
 			}
 			if(num_str == 0 && (f_est < d * FRIEND_FREQUENCY || num_fr == 0)
 					&& !just_started) {
-				System.out.println("done dancing, time to swap!");
+				//System.out.println("done dancing, time to swap!");
 				++ fake_cur_turn;
 				just_started = true;
 			} else if(just_started) {

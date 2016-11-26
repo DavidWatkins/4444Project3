@@ -8,9 +8,9 @@ import sqdance.sim.Player;
 import sqdance.sim.Point;
 
 public class UltimatePlayer implements Player {
-	private static double DANCER_DIS = 0.502;
-	private static double OFFSET = 0.02;
-	private static double REST_DIS = 0.102;
+	private static double DANCER_DIS = 0.50000000000001;
+	private static double OFFSET = 0.00000000000001;
+	private static double REST_DIS = 0.10000000000001;
 
 	private static int DANCER_PER_COL = 39;
 	private static int REST_PER_COL = 199;
