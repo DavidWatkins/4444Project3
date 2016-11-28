@@ -15,13 +15,11 @@ import sqdance.sim.Point;
 
 public class Player implements sqdance.sim.Player {
 	private static int THRESHOLD1 = 900;
-	private static int THRESHOLD2 = 1600;
-	private static int THRESHOLD3 = 1840;
+	private static int THRESHOLD2 = 1840;
 
 	private RoundTablePlayer p1 = new RoundTablePlayer();
     private SnakeShiftPlayer p2 = new SnakeShiftPlayer();
-	private RoundTableGreedyPlayer p3 = new RoundTableGreedyPlayer();
-	private UltimatePlayer p4 = new UltimatePlayer();
+	private UltimatePlayer p3 = new UltimatePlayer();
 
 	private int d;
 	private int room_side;
@@ -34,10 +32,8 @@ public class Player implements sqdance.sim.Player {
 			p1.init(d, room_side);
 		else if (d <= THRESHOLD2)
 			p2.init(d, room_side);
-		else if (d <= THRESHOLD3)
-			p3.init(d, room_side);
 		else
-			p4.init(d, room_side);
+			p3.init(d, room_side);
 	}
 
 	@Override
@@ -46,10 +42,8 @@ public class Player implements sqdance.sim.Player {
 			return p1.generate_starting_locations();
 		else if (d <= THRESHOLD2)
 			return p2.generate_starting_locations();
-		else if (d <= THRESHOLD3)
-			return p3.generate_starting_locations();
 		else
-			return p4.generate_starting_locations();
+			return p3.generate_starting_locations();
 	}
 
 	@Override
@@ -63,10 +57,8 @@ public class Player implements sqdance.sim.Player {
 			return p1.play(dancers, scores, partner_ids, enjoyment_gained);
 		else if (d <= THRESHOLD2)
 			return p2.play(dancers, scores, partner_ids, enjoyment_gained);
-		else if (d <= THRESHOLD3)
-			return p3.play(dancers, scores, partner_ids, enjoyment_gained);
 		else
-			return p4.play(dancers, scores, partner_ids, enjoyment_gained);
+			return p3.play(dancers, scores, partner_ids, enjoyment_gained);
 	}
 
 }

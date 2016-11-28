@@ -73,7 +73,7 @@ public class SnakeShiftPlayer implements sqdance.sim.Player {
      */
     private Point[] generate_startgrid() {
     	double x = 0, y = 0;
-    	double x2 = 0.50000000000001;
+    	double x2 = 0.433588514608044, y2 = 0.249;
     	boolean even = true;
     	boolean new_column = false;
     	boolean even_col = true;
@@ -87,17 +87,19 @@ public class SnakeShiftPlayer implements sqdance.sim.Player {
             }
 
         	test1 = new Point(x, y);
-        	test2 = new Point(x2, y);
+        	test2 = new Point(x2, y2);
             if (!test1.valid_movement(new Point(0,0), (int) room_side) ||
             				!test2.valid_movement(new Point(0,0), (int) room_side)) {
             	this.col_cnt++;
             	even_col = (!even_col);
             	if (even_col) {
             	    y = 0;
+                    y2 = 0.249;
             	} else {
             	    y -= 0.50000000000002;
+                    y2 -= 0.50000000000002;
             	}
-            	x += 1.00000000000035; x2 += 1.00000000000035;
+            	x += 0.86717702921609; x2 += 0.86717702921609;
             	new_column = true;
             } else {
             	new_column = false;
@@ -106,7 +108,7 @@ public class SnakeShiftPlayer implements sqdance.sim.Player {
             this.record_movement(i, new_column, even_col, even);
 
 			if (!even) {
-            	L[i] = new Point(x2, y);
+            	L[i] = new Point(x2, y2);
             } else {
             	L[i] = new Point(x, y);
             }
@@ -114,8 +116,10 @@ public class SnakeShiftPlayer implements sqdance.sim.Player {
     		if (new_column) continue;
     		if (even_col && even) {
     		    y += 0.50000000000002;
+                y2 += 0.50000000000002;
     		} else if (!even_col && even) {
     		    y -= 0.50000000000002;
+                y2 -= 0.50000000000002;
     		}
         }
         return L;
