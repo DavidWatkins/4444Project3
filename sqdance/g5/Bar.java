@@ -4,9 +4,11 @@ import java.util.*;
 
 import sqdance.sim.Point;
 
-public class Bar extends Shape{
-	public int barId;
+public class Bar extends Shape {
+	/* Bar specific records */
+	;
 
+	// Anchor points
 	public Point center;
 	public Point topLeft;
 	public Point topRight;
@@ -44,13 +46,20 @@ public class Bar extends Shape{
 	boolean isEven;
 
 	public void debrief() {
-		System.out.println("Bar id: " + barId);
-		System.out
-				.println("Upconnected: " + upConnected + " Bottomconnected: " + bottomConnected + " IsEven: " + isEven);
-		System.out.println("Topleft: " + topLeft);
-		System.out.println("TopRight: " + topRight);
-		System.out.println("BottomLeft: " + bottomLeft);
-		System.out.println("BottomRight: " + bottomRight);
+		System.out.println("Bar id: " + id);
+		
+//		System.out
+//				.println("Upconnected: " + upConnected + " Bottomconnected: " + bottomConnected + " IsEven: " + isEven);
+//		System.out.println("Topleft: " + topLeft);
+//		System.out.println("TopRight: " + topRight);
+//		System.out.println("BottomLeft: " + bottomLeft);
+//		System.out.println("BottomRight: " + bottomRight);
+		
+		/* Detailed maps */
+		System.out.println(dancerId);
+		System.out.println(idToPosition);
+		System.out.println(idToRow);
+		
 	}
 
 	int number;
@@ -61,7 +70,7 @@ public class Bar extends Shape{
 		// store params
 		this.number = number;
 		this.center = center;
-		this.barId = id;
+		this.id = id;
 
 		// calculate starting points of the two rows
 		int column = number / 2;
@@ -79,8 +88,10 @@ public class Bar extends Shape{
 		} else {
 			System.out.println("Odd number in a column");
 			halfRow = (column - 1) / 2;
-			startLeft = new Point(center.x - 0.5 * OneMoreTimeStrategy.HORIZONTAL_GAP, center.y - halfRow * OneMoreTimeStrategy.VERTICAL_GAP);
-			startRight = new Point(center.x + 0.5 * OneMoreTimeStrategy.HORIZONTAL_GAP, center.y - halfRow * OneMoreTimeStrategy.VERTICAL_GAP);
+			startLeft = new Point(center.x - 0.5 * OneMoreTimeStrategy.HORIZONTAL_GAP,
+					center.y - halfRow * OneMoreTimeStrategy.VERTICAL_GAP);
+			startRight = new Point(center.x + 0.5 * OneMoreTimeStrategy.HORIZONTAL_GAP,
+					center.y - halfRow * OneMoreTimeStrategy.VERTICAL_GAP);
 		}
 		System.out.println("Starting points:");
 		System.out.format("Left start: (%f, %f)", startLeft.x, startLeft.y);
@@ -98,7 +109,8 @@ public class Bar extends Shape{
 		// assign people to points
 		for (int i = 0; i < column; i++) {
 			Point leftPlayer = new Point(startLeft.x, startLeft.y + i * OneMoreTimeStrategy.VERTICAL_GAP);
-			Point rightPlayer = new Point(startLeft.x + OneMoreTimeStrategy.HORIZONTAL_GAP, startLeft.y + i * OneMoreTimeStrategy.VERTICAL_GAP);
+			Point rightPlayer = new Point(startLeft.x + OneMoreTimeStrategy.HORIZONTAL_GAP,
+					startLeft.y + i * OneMoreTimeStrategy.VERTICAL_GAP);
 			spots.add(leftPlayer);
 			spots.add(rightPlayer);
 		}
@@ -119,16 +131,17 @@ public class Bar extends Shape{
 		}
 	}
 
-	/* Check if a point is in the left or right
-	 * -1: Not in this bar
-	 * 0: left
+	/*
+	 * Check if a point is in the left or right 
+	 * -1: Not in this bar 
+	 * 0: left 
 	 * 1: right
-	 * */
-	public int column(Point p){
-		double diffX=Math.abs(p.x-center.x);
-		if(2*diffX>OneMoreTimeStrategy.HORIZONTAL_GAP)
+	 */
+	public int column(Point p) {
+		double diffX = Math.abs(p.x - center.x);
+		if (2 * diffX > OneMoreTimeStrategy.HORIZONTAL_GAP+0.3)
 			return -1;
-		if(p.x<center.x)
+		if (p.x < center.x)
 			return 0;
 		else
 			return 1;
@@ -161,7 +174,7 @@ public class Bar extends Shape{
 		// 0);
 
 		// find previous bar
-		Bar prev = OneMoreTimeStrategy.getInstance().bars.get(this.barId - 1); //CHANNGGEEED
+		Bar prev = OneMoreTimeStrategy.getInstance().bars.get(this.id - 1);
 
 		// find the target to go to
 		Point target;
@@ -190,7 +203,7 @@ public class Bar extends Shape{
 		// Point newLoc = new Point(Player.HORIZONTAL_GAP + Player.BAR_GAP, 0);
 
 		// find next bar
-		Bar next = OneMoreTimeStrategy.getInstance().bars.get(this.barId + 1);
+		Bar next = OneMoreTimeStrategy.getInstance().bars.get(this.id + 1);
 
 		// find the target to go to
 		Point target;
@@ -293,12 +306,11 @@ public class Bar extends Shape{
 		// top left
 		if (ToolBox.comparePoints(dancer, topLeft)) {
 			// System.out.println("");
+
 			// if the bar interacts with another
 			if (upConnected) {
 				if (isEven) {
-					System.out.println("even upConnected");
 					newLoc = goRightToNextBar(dancer);
-					System.out.println("go right");
 					moveToNextBar(dancerId, idToBar);
 
 				} else {
@@ -310,7 +322,6 @@ public class Bar extends Shape{
 				newLoc = goRight(dancer);
 			}
 		}
-
 		// top right
 		if (ToolBox.comparePoints(dancer, topRight)) {
 			if (upConnected) {
@@ -383,7 +394,6 @@ public class Bar extends Shape{
 		}
 	}
 
-
 	public void swapPoints(Point[] points, int index0, int index1) {
 		if (index0 >= points.length) {
 			System.out.format("Index %d out of range in swapping\n", index0);
@@ -397,110 +407,94 @@ public class Bar extends Shape{
 	}
 
 	/* Soulmate movement */
-	public Map<Integer, Point> doSoulmateMove(Pair p, Map<Integer, Integer> idToBar) {
-		//if even go down //if odd go up
-		//check if next is in honeymoon suite
+	public Map<Integer, Point> doSoulmateMove(Point[] dancers, int partner1, int partner2) {
 		// decides which of the partners is on the left side and right side
-		Map<Integer, Point> moves = new HashMap<>();
-		boolean bottom = false;
-		boolean top = true;
-		Point dancer1 = p.leftdancer;
-		Point dancer2 = p.rightdancer;
-		Bar prev = LoveBirdStrategy.getInstance().bars.get(0);
-		if (barId >0)
-			prev = LoveBirdStrategy.getInstance().bars.get(this.barId - 1);
-
-		/* 2nd week solution */
-
-		if (isEven) {
-			dancer1 = goDown(dancer1);
-			dancer2 = goDown(dancer2);
+		Map<Integer, Point> moves = new HashMap<Integer, Point>();
+		int leftNum, rightNum;
+		if (dancers[partner1].x < center.x) {
+			leftNum = partner1;
+			rightNum = partner2;
 		} else {
-			dancer1 = goUp(dancer1);
-			dancer2 = goUp(dancer2);
+			leftNum = partner2;
+			rightNum = partner1;
 		}
+		Point left = dancers[leftNum];
+		Point right = dancers[rightNum];
 
+		// checks if the pair has already reached the soulmate stack
+		if (!inPlace(left) && !inPlace(right)) { // redundant but ok
+			int first = -1;
+			int second = -1;
 
-		/* Special case */
-		// top 
-		if (ToolBox.comparePoints(dancer1, topLeft)||ToolBox.comparePoints(dancer2, topLeft)) {
-			top = true;
-			// if the bar interacts with another
-			if (upConnected && !isEven) {
-
-				Point target1, target2;
-				if (p.leftdancer.x < center.y) {
-					target1 = prev.topLeft;
-					target2 = prev.topRight;
-				} else {
-					target2 = prev.topLeft;
-					target1 = prev.topRight;
+			// finds first and second, the 2 dancers that have to move twice
+			// because left is going opposite
+			for (int i = 0; i < dancers.length; i++) {
+				// checks left side, and is right below left
+				if (dancers[i].x < center.x && dancers[i].y > left.y
+						&& ToolBox.compareDoubles(dancers[i].y, left.y + OneMoreTimeStrategy.VERTICAL_GAP)) {
+					first = i;
+				} else { // checks for the second
+					// if soulmates are one move from stack, the second is on
+					// the bottom right
+					// checks if one above the stack, on the right, and at the
+					// bottom
+					if (ToolBox.compareDoubles(left.y + OneMoreTimeStrategy.VERTICAL_GAP, bottomRight.y)
+							&& dancers[i].x > center.x
+							&& ToolBox.compareDoubles(dancers[i].y, left.y + OneMoreTimeStrategy.VERTICAL_GAP)) // bottom
+						// right
+						second = i;
+					// otherwise it's just 2 down, so makes sure it's not right
+					// about the stack, it's on the left, and 2 down
+					else if (!ToolBox.compareDoubles(left.y + OneMoreTimeStrategy.VERTICAL_GAP, bottomRight.y)
+							&& dancers[i].x < center.x
+							&& ToolBox.compareDoubles(dancers[i].y, left.y + 2 * OneMoreTimeStrategy.VERTICAL_GAP))
+						second = i;
 				}
-				dancer1 = ToolBox.pointsDifferencer(p.leftdancer, target1);
-				dancer2 = ToolBox.pointsDifferencer(p.rightdancer, target2);
-				System.out.println("In order to reach the target I should go " + dancer1);
-				System.out.println("In order to reach the target I should go " + dancer2);
-				moveToPrevBar(p.leftid, idToBar);
-				moveToPrevBar(p.rightid, idToBar);
-
 			}
-		}
-		// bottom
-		if (ToolBox.comparePoints(dancer1, bottomLeft)||ToolBox.comparePoints(dancer2, bottomLeft)) {
-			bottom = true;
-			if (bottomConnected && isEven)  {
+			// makes sure the other 2 are found
+			if (first >= 0 && second >= 0) {
+				// combines 2 moves for the other
+				Point tempMove = move(dancers[first]);
+				Point firstMove = tempMove.add(move(dancers[first].add(tempMove)));
+				System.out.println("first: " + firstMove.x + ", " + firstMove.y);
+				tempMove = move(dancers[second]);
+				Point secondMove = tempMove.add(move(dancers[second].add(tempMove)));
+				System.out.println("second: " + secondMove.x + ", " + secondMove.y);
 
-				Point target1, target2;
-				if (p.leftdancer.x < center.y) {
-					target1 = prev.bottomLeft;
-					target2 = prev.bottomRight;
-				} else {
-					target2 = prev.bottomLeft;
-					target1 = prev.bottomRight;
-				}
-				dancer1 = ToolBox.pointsDifferencer(p.leftdancer, target1);
-				dancer2 = ToolBox.pointsDifferencer(p.rightdancer, target2);
-				System.out.println("In order to reach the target I should go " + dancer1);
-				System.out.println("In order to reach the target I should go " + dancer2);
-				moveToPrevBar(p.leftid, idToBar);
-				moveToPrevBar(p.rightid, idToBar);
-			}
-
-		}
-
-		//check if it's in the honeymoon
-		boolean honeymoon = false;
-		if (!isEven){
-			if (ToolBox.comparePoints(p.leftdancer.add(dancer1), prev.bottomLeft)||ToolBox.comparePoints(p.leftdancer.add(dancer1), prev.bottomRight)){
-				upConnected = false;
-				honeymoon = true;
-			} else if(ToolBox.comparePoints(p.leftdancer.add(dancer1), topLeft)||ToolBox.comparePoints(p.leftdancer.add(dancer1), topRight)){
-				topLeft = goDown(topLeft);
-				topRight = goDown(topRight);
-				honeymoon = true;
+				moves.put(first, firstMove);
+				moves.put(second, secondMove);
+				moves.put(rightNum, move(right)); // right moves normally
+				moves.put(leftNum, new Point(0, OneMoreTimeStrategy.VERTICAL_GAP)); // left
+				// moves
+				// down
+				System.out.println();
+			} else {
+				System.out.println("couldn't find first and second");
 			}
 		} else {
-			if (ToolBox.comparePoints(p.leftdancer.add(dancer1), prev.topLeft)||ToolBox.comparePoints(p.leftdancer.add(dancer1), prev.topRight)){
-				bottomConnected = false;
-				honeymoon = true;
-			} else if(ToolBox.comparePoints(p.leftdancer.add(dancer1), bottomLeft)||ToolBox.comparePoints(p.leftdancer.add(dancer1), bottomRight)){
-				bottomLeft = goUp(bottomLeft);
-				bottomRight = goUp(bottomRight);
-				honeymoon = true;
-			}
+			// the pair are already in place so just don't move
+			moves.put(leftNum, new Point(0, 0));
+			moves.put(rightNum, new Point(0, 0));
 		}
 
-		moves.put(p.leftid, dancer1);
-		moves.put(p.rightid, dancer2);
-		if (honeymoon)
-			moves.put(-1, new Point(0,0));
-		
-		System.out.println("Moved Soulmates: Dancer"+p.leftid+": "+dancer1.x+","+dancer1.y+";Dancer"+p.rightid+": "+dancer2.x+","+dancer2.y);
-		System.out.println(moves.size());
 		return moves;
 
 	}
 
+	public boolean inPlace(Point dancer) {
+		if (dancer.y > bottomRight.y)
+			return true;
+		if (ToolBox.compareDoubles(dancer.y, bottomRight.y)) { // just got into
+																// place so move
+																// bottom up one
+																// so stack is
+																// out of
+																// rotation
+			bottomRight = bottomRight.add(new Point(0, -OneMoreTimeStrategy.VERTICAL_GAP));
+			return true;
+		}
+		return false;
+	}
 
 	/* Swapping */
 	public Point innerSwap(Point dancer) {
@@ -548,6 +542,7 @@ public class Bar extends Shape{
 		return new Point(0, 0);
 	}
 
+	/* Static functions */
 	public static int findRelativeIdInBar(Point p, Bar b) {
 		// check whether it's in this bar
 		double diffX = p.x - b.center.x;
@@ -566,4 +561,59 @@ public class Bar extends Shape{
 		else
 			return row * 2 + 1;
 	}
+
+	@Override
+	public String toString() {
+		return "Bar " + id;
+	}
+
+	@Override
+	public void recordDancer(int pid, Point positon, int row) {
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public void recordDancers(List<Integer> pids) {
+		if (pids.size() != spots.size()) {
+			System.out.format("Error: dancer number %d doesn't match ID number %d in %s!", spots.size(), pids.size(),
+					this);
+			return;
+		}
+
+		// Update records in Shape
+		for (int i = 0; i < pids.size(); i++) {
+			int pid = pids.get(i);
+			Point position = spots.get(i);
+			int row = findRowByPosition(position);
+
+			// Update data structure in Shape
+			dancerId.add(pid);
+			idToRow.put(pid, row);
+			idToPosition.put(pid, position);
+		}
+
+		System.out.println("Recorded " + pids.size() + " dancers in line " + this.id);
+		return;
+
+	}
+
+	@Override
+	public int findRowByPosition(Point position) {
+		double diffX = position.x - this.center.x;
+		if (Math.abs(diffX) > 0.6 * LineStrategy.HORIZONTAL_GAP) {
+			System.out.println("Error: " + position + " is not in " + this);
+			return -1;
+		}
+
+		double diffY = position.y - this.topLeft.y;
+		double row=diffY/LineStrategy.VERTICAL_GAP;
+		
+		if(row%1.0>0.2){
+			System.out.println("Error: "+row+" is too far away from a row by distance of "+diffY+" to head");
+		}
+		
+		return (int)Math.round(row);
+	}
+
 }

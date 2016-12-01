@@ -46,6 +46,7 @@ public class Utils {
 				line.add(new Point(x, y));
 			grid.add(line);
 			mode = 1 - mode;
+			//System.err.println(radius + " " + w + " " + line.size() + " " + line.get(line.size() - 1).y);
 		}
 		return grid;
 	}
@@ -53,15 +54,18 @@ public class Utils {
 	// spiral line from outward to inward
 	public static Point[][] generate_round_table(double h, double w, double dist, double fluctuation) {
 		List<List<Point>> grid = draw_grid(h, w, dist / 2.0 + fluctuation * 2);
-		int numPoints = 0, width = 0;
+		int numPoints = 0, width = 1000;
 		for (List<Point> line : grid) {
-			numPoints += line.size();
-			width = Math.max(line.size(), width);
+			width = Math.min(line.size(), width);
 		}
+		numPoints = grid.size() * width;
 
 		boolean vis[][] = new boolean[grid.size()][width];
 
 		//System.out.println(width + " " + grid.size());
+		//System.err.println(h + " " + w + " " + grid.size() + " " + width);
+
+		if (numPoints % 2 == 1) -- numPoints;
 
 		int dx = 0, dy = 1;
 		int x = 0, y = 0;
@@ -71,24 +75,33 @@ public class Utils {
 		for (int i = 0; i < numPoints; ++ i) {
 			vis[x][y] = true;
 
+			int ox = x, oy = y;
+
 			// Turn
 			if (dx == 1 && (x + dx >= grid.size() || vis[x + dx][y + dy])) {
 				dx = 0; dy = -1;
 			} else if (dx == -1 && (x + dx < 0 || vis[x + dx][y + dy])) {
 				dx = 0; dy = 1;
-			} else if (dy == 1 && (y + dy >= grid.get(x).size() || vis[x + dx][y + dy])) {
+			} else if (dy == 1 && (y + dy >= width || vis[x + dx][y + dy])) {
 				dx = 1; dy = 0;
 			} else if (dy == -1 && (y + dy < 0 || vis[x + dx][y + dy])) {
 				dx = -1; dy = 0;
 			}
 			x += dx; y += dy;
 
+/*
+			if (y - dy == 37) {
+				System.err.println(i + " " + numPoints + " " + (x - dx) + " " + (y - dy));
+				System.err.println(x + " " + y);
+				System.err.println(grid.get(x - dx).size() + " " + grid.get(x).size());
+			}*/
+
 			if (i == numPoints - 1)
-				ret[i][1] = grid.get(x - dx).get(y - dy);
+				ret[i][1] = grid.get(ox).get(oy);
 			else {
-				ret[i][1] = add(grid.get(x - dx).get(y - dy), multiply(getDirection(grid.get(x).get(y), grid.get(x - dx).get(y - dy)), 0.5 * fluctuation));
+				ret[i][1] = add(grid.get(ox).get(oy), multiply(getDirection(grid.get(x).get(y), grid.get(ox).get(oy)), 0.5 * fluctuation));
 				ret[i + 1][0] = add(grid.get(x).get(y),
-								multiply(getDirection(grid.get(x - dx).get(y - dy), grid.get(x).get(y)), 0.5 * fluctuation));
+								multiply(getDirection(grid.get(ox).get(oy), grid.get(x).get(y)), 0.5 * fluctuation));
 			}
 
 		}

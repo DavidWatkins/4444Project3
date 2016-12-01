@@ -25,7 +25,8 @@ public class Player implements sqdance.sim.Player {
 	private int couples_found = 0;
 	private int stay = 0;
 	private boolean single_all_the_way = false;
-
+	private int normal_limit = 1600;
+	private int single_limit = 960;
 
 	public class Dancer{
 		int id = -1;
@@ -55,7 +56,7 @@ public class Player implements sqdance.sim.Player {
 	private boolean connected;
 	private Point[] starting_positions;
 	private Point[] last_positions;
-	private Point[] still;
+	private Point[] stay_and_dance;
 	private Pit[] pits;
 	private int state; // 1 represents 0-1 2-3 4-5, 2 represents 0 1-2 3-4 5
 	//====================== end =========================
@@ -76,17 +77,17 @@ public class Player implements sqdance.sim.Player {
 		this.d = d;
 		this.room_side = room_side;
 
-		if (d < 1483) init_normal();
+		if (d <= normal_limit) init_normal();
 		else init_exchangeStage(d, room_side);
 	}
 
 	public Point[] generate_starting_locations() {
-		if (d < 1483) return generate_starting_locations_normal();
+		if (d <= normal_limit) return generate_starting_locations_normal();
 		else return generate_starting_locations_exchangeStage();
 	}
 
 	public Point[] play(Point[] old_positions, int[] scores, int[] partner_ids, int[] enjoyment_gained) {
-		if (d < 1483) return play_normal(old_positions, scores, partner_ids, enjoyment_gained);
+		if (d <= normal_limit) return play_normal(old_positions, scores, partner_ids, enjoyment_gained);
 		else return play_exchangeStage(old_positions, scores, partner_ids, enjoyment_gained);
 	}
 
@@ -94,7 +95,7 @@ public class Player implements sqdance.sim.Player {
 
 	private void init_normal() {
 		//data structure initialization
-		this.single_all_the_way = this.d > 550;
+		this.single_all_the_way = this.d > this.single_limit;
 		//data structure initialization
 
 		this.relation = new int[d][d];
@@ -107,12 +108,12 @@ public class Player implements sqdance.sim.Player {
 
 
 		this.connected = true;
-		this.pits = new Pit[1483];
+		this.pits = new Pit[normal_limit];
 		this.dancers = new Dancer[d];
-		this.still = new Point[d];
+		this.stay_and_dance = new Point[d];
 
 		for(int i = 0; i < d; i++){
-			this.still[i] = new Point(0,0);
+			this.stay_and_dance[i] = new Point(0,0);
 		} 
 
 
@@ -123,10 +124,10 @@ public class Player implements sqdance.sim.Player {
 		int old_i = -1;
 		int sign = 1;
 
-		double x_min = this.delta;
-		double x_max = this.room_side;
+		double x_min = this.delta - safeDis;
+		double x_max = this.room_side + safeDis;
 		double y_min = this.delta;
-		double y_max = this.room_side;
+		double y_max = this.room_side + safeDis;
 
 		//create the pits in a spiral fashion
 		while(old_i != i){
@@ -196,32 +197,30 @@ public class Player implements sqdance.sim.Player {
 	public Point[] play_normal(Point[] old_positions, int[] scores, int[] partner_ids, int[] enjoyment_gained) {
 		updatePartnerInfo(partner_ids,enjoyment_gained);
 		this.last_positions = old_positions;
-		
-		if(stay < boredTime){
-			Point[] movement = new Point[this.d];
-			this.stay += 6;
-			for (int i=0; i<this.d; i++) {
-				movement[i]= new Point(0.,0.);
-			}
-			return movement;
+
+		move_couple();
+		if(!this.connected) {
+			connect();
 		}
-		else if(this.connected){
-			swap();
-			this.stay = 0;
+		else{
+			if(stay < boredTime){
+				this.stay += 6;
+				return stay_and_dance;
+			}
+			else{
+				swap();
+			}
 		}
 			
-		if(!this.connected) connect();
-		
-		move_couple();
-		
 		//generate instructions using target positions and current positions
-		return generateInstructions(old_positions);
+		return generateInstructions();
 	}
 
 	//update dancer relations based on enjoyment gained;
 	//also arrange couple's destination honeymoon pit number, set them close to each other 
 	void updatePartnerInfo(int[] partner_ids, int[] enjoyment_gained) {
 		if(single_all_the_way) return;
+		int new_couples = 0;
 		for(int i = 0; i < d; i++){
 			if(enjoyment_gained[i] == 6){
 				if(relation[i][partner_ids[i]] != 1) {
@@ -234,6 +233,7 @@ public class Player implements sqdance.sim.Player {
 					dancers[partner_ids[i]].pit_id = this.pits.length - 2 - this.couples_found;
 					this.connected = false;
 					this.couples_found += 2;
+					new_couples += 2;
 				}
 				relation[i][partner_ids[i]] = 1;
 				relation[partner_ids[i]][i] = 1;
@@ -247,6 +247,7 @@ public class Player implements sqdance.sim.Player {
 			}
 			danced[i][partner_ids[i]] += 6;
 		}
+		//if(new_couples != 0) System.out.println("new couples: " + new_couples);
 	}
 
 	// a = (x,y) we want to find least distance between (x+this.delta/3, y) (x-this.delta/3, y) (x, y+this.delta/3) (x, y-this.delta/3) and b
@@ -270,33 +271,34 @@ public class Player implements sqdance.sim.Player {
 		return -1;
 	}
 
+	int getNextPit(int pit_id){
+		int remain_singles = this.d - this.couples_found;
+		if (pit_id%2 == 0 && this.state == 1 || pit_id%2 == 1 && this.state == 2){
+			if(pit_id == remain_singles -1) return -1;
+			return pit_id + 1;
+		}
+		if(pit_id == 0) return -1;
+		return pit_id -1;
+	}
 
 	//modify the desination positions of active dancers;
 	void swap() {
 		int remain_singles = this.d - this.couples_found;
-		if (remain_singles == 0) 
-			return;
-		for (int i = 0; i < remain_singles; i++) {
-			int dancer_id = findDancer(i);
-			if (i%2 == 0 && this.state == 1 || i%2 == 1 && this.state == 2) {
-				if (i == remain_singles - 1) {
-					dancers[dancer_id].next_pos = new Point(pits[i].pos.x -this.delta/3, pits[i].pos.y);
-					dancers[dancer_id].pit_id = i;
-				} else {
-					dancers[dancer_id].next_pos = findNearestActualPoint(pits[i+1].pos, pits[i].pos);
-					dancers[dancer_id].pit_id = i+1;
-				}
-			} else if (i%2 == 1 && this.state == 1 || i%2 == 0 && this.state == 2) {
-				if (i==0) {
-					dancers[dancer_id].next_pos = new Point(pits[i].pos.x -this.delta/3, pits[i].pos.y);
-					dancers[dancer_id].pit_id = i;
-				} else {
-					dancers[dancer_id].next_pos = findNearestActualPoint(pits[i-1].pos, pits[i].pos);
-					dancers[dancer_id].pit_id = i-1;
-				}
+		for (int pit_id = 0; pit_id < remain_singles; pit_id++) {
+			int dancer_id = findDancer(pit_id);
+			if(dancers[dancer_id].soulmate != -1) continue;
+			int next_pit = getNextPit(pit_id);
+			if(next_pit == -1){
+				dancers[dancer_id].next_pos = new Point(pits[pit_id].pos.x, pits[pit_id].pos.y);
+				dancers[dancer_id].pit_id = pit_id;
+			}
+			else{
+				dancers[dancer_id].next_pos = findNearestActualPoint(pits[next_pit].pos, pits[pit_id].pos);
+				dancers[dancer_id].pit_id = next_pit;
 			}
 		}
  		this.state = 3 - this.state;
+ 		this.stay = 0;
 	}
 
 
@@ -312,6 +314,7 @@ public class Player implements sqdance.sim.Player {
 
 	// update single dancer's next position, shrink everyone to the head of the snake;
 	void connect() {
+		int[] supposed_pit_num = new int[d];
 		this.stay = 0;
 		int target_pit_id = 0;
 		this.connected = true;
@@ -342,15 +345,47 @@ public class Player implements sqdance.sim.Player {
 				else if(pointer.pit_id > target_pit_id){
 					pointer = getPrev(pointer);
 				}
-				stop = distance(pointer.pos,curr_pos) > 2 || pointer.pit_id == target_pit_id;
+				stop = distance(pointer.pos,curr_pos) > 2 || pointer.pit_id == target_pit_id || findDancer(pointer.pit_id) != -1;
 			}
-			if(distance(pointer.pos,curr_pos) > 2){
+			if(distance(pointer.pos,curr_pos) > 2 || findDancer(pointer.pit_id) != -1){
 				pointer = prev;
 			}
 			dancers[dancer_id].pit_id = pointer.pit_id;
 			dancers[dancer_id].next_pos = pointer.pos;
 			this.connected = this.connected && pointer.pit_id == target_pit_id;
+			supposed_pit_num[dancer_id] = pointer.pit_id;
 			target_pit_id++;
+		}
+
+		boolean swap_and_dance = true;
+		
+		//after arranged pits, see if it is possible to swap all the dancers in this round
+		if(this.connected){
+			Point[] next_pos = new Point[d];
+			int[] next_pit_id = new int[d];
+			for (int i = 0; i < d; i++) {
+				if(dancers[i].soulmate != -1) continue;
+				int curr_pit = dancers[i].pit_id;
+				int next_pit = getNextPit(curr_pit);
+				if(next_pit != -1){
+					next_pos[i] = findNearestActualPoint(pits[next_pit].pos, pits[curr_pit].pos);
+					next_pit_id[i] = next_pit;
+				}
+				else{
+					next_pos[i] = dancers[i].next_pos;
+					next_pit_id[i] = dancers[i].pit_id;
+				}
+				swap_and_dance = swap_and_dance && distance(next_pos[i],this.last_positions[i]) < 2;
+			}
+			if(swap_and_dance){
+				for(int i = 0; i < d; i++){
+					if(dancers[i].soulmate != -1) continue;
+					dancers[i].next_pos = next_pos[i];
+					dancers[i].pit_id = next_pit_id[i];
+				}
+				this.state = 3 - this.state;
+				this.stay = 0;
+			}
 		}
 	}
 
@@ -382,10 +417,10 @@ public class Player implements sqdance.sim.Player {
 	}
 
 	// generate instruction according to this.dancers
-	private Point[] generateInstructions(Point[] old_positions){
+	private Point[] generateInstructions(){
 		Point[] movement = new Point[d];
 		for(int i = 0; i < d; i++){
-			movement[i] = new Point(dancers[i].next_pos.x-old_positions[i].x,dancers[i].next_pos.y-old_positions[i].y);
+			movement[i] = new Point(dancers[i].next_pos.x-this.last_positions[i].x,dancers[i].next_pos.y-this.last_positions[i].y);
 			if(movement[i].x * movement[i].x + movement[i].y * movement[i].y > 4){
 				System.out.println("dancer " + i + " move too far");
 				System.out.println("soulmate: " + dancers[i].soulmate);
@@ -403,7 +438,7 @@ public class Player implements sqdance.sim.Player {
 	//============ ExchangeStage Strategy for large number of dancers===================
 
 	private void init_exchangeStage(int d, int room_side) {
-		delta = 1e-4; boredTime = 60;
+		delta = 1e-4; boredTime = 120;
 
 		numDancer = d; roomSide = room_side;
 		// initialize position
@@ -461,17 +496,20 @@ public class Player implements sqdance.sim.Player {
 
 	private void fixDancerPositions() {
 		// binary search the scale of the auditorium and stage
-		boolean fitin = false;
+		if (arrangePositionCrowdAuditorium()) return;
+		
+		System.out.println("*************** only one row stage **************");
 		int l = 1, r = 5;
 		while (l < r) {
 			int mid = (l + r) >> 1;
 			boolean ret = arrangePosition(mid);
 			if (ret) r = mid; else l = mid + 1;
 		}
-		System.out.println("*************** numCol: " + l);
+		boredTime = Math.max(120 - 24 * (l - 1), 12);
+		System.out.println("*************** numCol: " + l + "***************");
 		if (!arrangePosition(l)) {
-			System.out.println("************** change to crowd auditorium");
-			boredTime = 6;
+			System.out.println("************** change to crowd auditorium *****************");
+			boredTime = 12;
 			arrangePositionCrowdAuditorium();
 		}
 	}
@@ -480,8 +518,14 @@ public class Player implements sqdance.sim.Player {
 		double yAudRange = (safeDis + delta) * (numCol - 1) + delta * 2;
 		double yStageRange = (minDis + delta) * 2 + delta;
 		double xrange = (safeDis + delta) * numRowAuditoriumBlock + delta;
+		double yrange = yAudRange + yStageRange;
+
+		int numBlock = (int)((roomSide - eps) / xrange) * (int)((roomSide - eps) / yrange);
+		int numPitAuditorium = ((numDancer - 1) / numBlock) + 1 - 2;
+		int residual = numDancer - (numPitAuditorium + 2 - 1) * numBlock;
 
 		int cur = 0;
+		int curBlock = 0;
 		for (int j = 0; ; ++j) {
 			int indexl = cur;
 
@@ -490,6 +534,8 @@ public class Player implements sqdance.sim.Player {
 			if (yleft + yAudRange + (minDis + delta) + delta > roomSide - eps) break;
 
 			for (int i = 0; ; ++i) {
+
+				++curBlock;
 
 				double xleft = i * xrange;
 				double xright = xleft + xrange;
@@ -506,10 +552,14 @@ public class Player implements sqdance.sim.Player {
 				if (cur >= numDancer) break;
 
 				// arrange positions in auditorium
+				int curNumPit = numPitAuditorium;
+				if (curBlock >= residual) --curNumPit;
+				int done = 0;
 				double y = yleft + delta;
-				for (int col = 0; col < numCol && y < yright - eps; ++col) {
+				for (int col = 0; col < numCol && y < yright - eps && done < curNumPit; ++col) {
 					double x = xleft + (safeDis + delta) / 2.;
-					for (int row = 0; row < numRowAuditoriumBlock && x < xright - eps; ++row) {
+					for (int row = 0; row < numRowAuditoriumBlock && x < xright - eps && done < curNumPit; ++row) {
+						++done;
 						
 						tmp = new Point(x, y);
 						if (!inside(tmp)) break;
@@ -549,14 +599,18 @@ public class Player implements sqdance.sim.Player {
 		return true;
 	}
 
-	private void arrangePositionCrowdAuditorium() {
+	private boolean arrangePositionCrowdAuditorium() {
+		boolean res = true;
+
 		double yrange = (minDis + delta * 2.) * 3.;
 		double xrange = (minDis + delta) + (minDis + delta * 2) + delta;
 
 		int numBlock = (int)((roomSide - eps) / yrange) * (int)((roomSide - eps) / xrange);
 		int numPitAuditorium = ((numDancer - 1) / numBlock) + 1 - 4;
+		int residual = numDancer - (numPitAuditorium + 4 - 1) * numBlock;
 
 		int cnt = 0;
+		int curBlock = 0;
 		for (int j = 0; ; ++j) {
 			int indexl = cnt;
 
@@ -564,6 +618,10 @@ public class Player implements sqdance.sim.Player {
 			double yright = yleft + yrange;
 
 			for (int i = 0; ; ++i) {
+
+				++curBlock;
+				int curNumPit = numPitAuditorium;
+				if (curBlock >= residual) --curNumPit;
 
 				double xleft = xrange * i;
 				double xright = xleft + xrange;
@@ -578,20 +636,20 @@ public class Player implements sqdance.sim.Player {
 
 				position[cnt++] = new Point(x1, y1);
 				position[cnt++] = new Point(x2, y1);
+
 				position[cnt++] = new Point(x1, y2);
 				position[cnt++] = new Point(x2, y2);
 
-				if (cnt >= numDancer) break;
-
 				// arrange positions in crowd auditorium
 				int done = 0;
-				for (double x = xleft; x < xright; x += safeDis + delta, ++done) {
+				for (double x = xleft; x < xright && done < curNumPit; x += safeDis + delta, ++done) {
 					position[cnt++] = new Point(x, yleft);
-					if (cnt >= numDancer) break;
+					if (done > 1 && cnt >= numDancer) break;
 				}
 				if (cnt >= numDancer) break;
 
-				for (int k = done; k < numPitAuditorium; ++k) {
+				for (int k = done; k < curNumPit; ++k) {
+					res = false; // will get minus score
 					position[cnt++] = new Point(xright, yleft);
 				}
 			}
@@ -616,7 +674,7 @@ public class Player implements sqdance.sim.Player {
 				}
 			}
 
-			if (cnt >= numDancer) return;
+			if (cnt >= numDancer) return res;
 		}
 	}
 

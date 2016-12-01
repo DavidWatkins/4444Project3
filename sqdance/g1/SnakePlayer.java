@@ -27,6 +27,7 @@ public class SnakePlayer implements sqdance.sim.Player {
     private final double GRID_GAP = 0.5001; // distance between grid points
     private final double GRID_OFFSET_X = 0.4; // offset of entire grid from 0,0
     private final double GRID_OFFSET_Y = 0.4;
+    private final int SOULMATE_OPTION_THRESHOLD = 609; // use soulmate matching strategy if d <= this - this is 609 when f = 0.1
     
     // E[i][j]: the remaining enjoyment player j can give player i
     // -1 if the value is unknown (everything unknown upon initialization)
@@ -45,8 +46,13 @@ public class SnakePlayer implements sqdance.sim.Player {
         this.room_side = (double) room_side;
 
         // choose type of player: find soulmate or friends
-        findSoulmateOption = false;
-        findFriendsOption = true;
+        if (d <= SOULMATE_OPTION_THRESHOLD) {
+            findSoulmateOption = true;
+        }
+        else {
+            findFriendsOption = true;
+        }
+
         activeFriends = new HashSet<Integer>();
         
         // create the grid
@@ -413,8 +419,8 @@ public class SnakePlayer implements sqdance.sim.Player {
     private Point getVector(Point a, Point b) {
         Point diff = new Point(a.x - b.x, a.y - b.y);
         double hypot = Math.hypot(diff.x, diff.y);
-        if (hypot >= 2) {
-            diff = new Point(diff.x/hypot * 2, diff.y/hypot * 2);
+        if (hypot >= 1.999) {
+            diff = new Point(diff.x/hypot * 1.999, diff.y/hypot * 1.999);
         }
         return diff;
     }

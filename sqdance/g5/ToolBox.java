@@ -56,4 +56,14 @@ public class ToolBox {
 	public static double distance(Point a, Point b) {
 		return Math.sqrt(Math.pow(a.x - b.x, 2) + Math.pow(a.y - b.y, 2));
 	}
+
+	public static double movementDistance(Point a) {
+		return Math.sqrt(Math.pow(a.x, 2) + Math.pow(a.y, 2));
+	}
+
+	// Add two Points
+	public static Point addTwoPoints(Point a, Point b) {
+		return new Point(a.x + b.x, a.y + b.y);
+	}
+
 }

@@ -29,10 +29,14 @@ public class Block {
 		int count=1;
 		int multiplier = isTop ? -1 : 1;
 		for(int i=0; i<25 && count<dancersInBlock; i++){
-			if(i==2)
+			if(isTop && i==2)
 				continue;
-			else
+			else if(!isTop && i==22)
+				continue;
+			else if(isTop)
 				positions.add(startPoint.add(new Point((i/5)*0.10001,multiplier*(-2+(i%5))*0.10001))); //Change that 3 to a 5 later
+			else
+				positions.add(startPoint.add(new Point((4-i/5)*0.10001,multiplier*(-2+(i%5))*0.10001))); //Change that 3 to a 5 later
 			count++;
 		}
 		//System.out.println("Positions size: " + positions.size());

@@ -522,64 +522,64 @@ public class OneMoreTimeStrategy implements ShapeStrategy {
 		return new HashMap<>();
 	}
 
-	// // gets the soulmate moves
-	// private Map<Integer, Point> getSoulmateMoves(Point[] dancers, int[] partner_ids, int[] enjoyment_gained) {
-	// 	Map<Integer, Point> soulmateMoves = new HashMap<Integer, Point>();
-	// 	int[] nextPair = { -1, -1 }; // presets the next found soulmate to not
-	// 									// found
+	// gets the soulmate moves
+	private Map<Integer, Point> getSoulmateMoves(Point[] dancers, int[] partner_ids, int[] enjoyment_gained) {
+		Map<Integer, Point> soulmateMoves = new HashMap<Integer, Point>();
+		int[] nextPair = { -1, -1 }; // presets the next found soulmate to not
+										// found
 
-	// 	// loops through already known soulmates to check that they are at the
-	// 	// bottom of the bar
-	// 	boolean allSet = true;
-	// 	for (int i = 0; i < soulmates.size(); i++) {
-	// 		int danceID = soulmates.get(i);
-	// 		Bar theBar = bars.get(idToBar.get(danceID));
-	// 		if (theBar.inPlace(dancers[danceID])) { // in place checks that
-	// 												// they're under the bottom
-	// 			soulmateMoves.put(danceID, new Point(0, 0));
-	// 		} else {
-	// 			allSet = false;
-	// 		}
-	// 	}
+		// loops through already known soulmates to check that they are at the
+		// bottom of the bar
+		boolean allSet = true;
+		for (int i = 0; i < soulmates.size(); i++) {
+			int danceID = soulmates.get(i);
+			Bar theBar = bars.get(idToBar.get(danceID));
+			if (theBar.inPlace(dancers[danceID])) { // in place checks that
+													// they're under the bottom
+				soulmateMoves.put(danceID, new Point(0, 0));
+			} else {
+				allSet = false;
+			}
+		}
 
-	// 	// allSet false means currently moving a pair down so ignor any new
-	// 	// soulmates, true means time to check for a new pair
-	// 	if (allSet) {
-	// 		boolean newPair = false;
-	// 		for (int i = 0; i < dancers.length; i++) {
-	// 			// loops through dancers, if enjoyment is 6, with a soulmate
-	// 			if (enjoyment_gained[i] == 6 && !soulmates.contains(i)) {
-	// 				// picks the first pair it finds and doesn't over ride
-	// 				if (!newPair) {
-	// 					newPair = true;
-	// 					nextPair[0] = i;
-	// 					nextPair[1] = partner_ids[i];
-	// 					soulmates.add(i);
-	// 					soulmates.add(partner_ids[i]);
-	// 				}
-	// 			}
-	// 		}
-	// 	}
-	// 	// continues following the already found soulmate pair since it is not
-	// 	// at the bottom
-	// 	else if (soulmates.size() > 0) {
-	// 		nextPair[0] = soulmates.get(soulmates.size() - 2);
-	// 		nextPair[1] = soulmates.get(soulmates.size() - 1);
-	// 	}
+		// allSet false means currently moving a pair down so ignor any new
+		// soulmates, true means time to check for a new pair
+		if (allSet) {
+			boolean newPair = false;
+			for (int i = 0; i < dancers.length; i++) {
+				// loops through dancers, if enjoyment is 6, with a soulmate
+				if (enjoyment_gained[i] == 6 && !soulmates.contains(i)) {
+					// picks the first pair it finds and doesn't over ride
+					if (!newPair) {
+						newPair = true;
+						nextPair[0] = i;
+						nextPair[1] = partner_ids[i];
+						soulmates.add(i);
+						soulmates.add(partner_ids[i]);
+					}
+				}
+			}
+		}
+		// continues following the already found soulmate pair since it is not
+		// at the bottom
+		else if (soulmates.size() > 0) {
+			nextPair[0] = soulmates.get(soulmates.size() - 2);
+			nextPair[1] = soulmates.get(soulmates.size() - 1);
+		}
 
-	// 	// System.out.print("Next pair: " + nextPair[0] + ", " + nextPair[1]);
-	// 	if (nextPair[0] >= 0 && nextPair[1] >= 0) {
-	// 		// prints current location of pair
-	// 		// System.out.print("(" + dancers[nextPair[0]].x + ", " +
-	// 		// dancers[nextPair[0]].y + ")");
-	// 		// System.out.println("(" + dancers[nextPair[1]].x + ", " +
-	// 		// dancers[nextPair[1]].y + ")");
-	// 		Bar theBar = bars.get(idToBar.get(nextPair[0]));
-	// 		soulmateMoves.putAll(theBar.doSoulmateMove(dancers, nextPair[0], nextPair[1])); // moves
-	// 																						// //
-	// 																						// involved
-	// 	}
-	// 	return soulmateMoves;
-	// }
+		// System.out.print("Next pair: " + nextPair[0] + ", " + nextPair[1]);
+		if (nextPair[0] >= 0 && nextPair[1] >= 0) {
+			// prints current location of pair
+			// System.out.print("(" + dancers[nextPair[0]].x + ", " +
+			// dancers[nextPair[0]].y + ")");
+			// System.out.println("(" + dancers[nextPair[1]].x + ", " +
+			// dancers[nextPair[1]].y + ")");
+			Bar theBar = bars.get(idToBar.get(nextPair[0]));
+			soulmateMoves.putAll(theBar.doSoulmateMove(dancers, nextPair[0], nextPair[1])); // moves
+																							// //
+																							// involved
+		}
+		return soulmateMoves;
+	}
 
 }

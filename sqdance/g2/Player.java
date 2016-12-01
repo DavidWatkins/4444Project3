@@ -25,7 +25,8 @@ public class Player implements sqdance.sim.Player {
     static double room_side = -1;
     
     // Threshold values for d, TODO tune these
-    static int d1 = 380, d2 = 1840;
+    static int d1 = 350, d2 = 1840;
+    // static int d1 = 2, d2 = 8;
     
     // Estimated value of f from number of dancing pairs that are friends
     int f_estimate;
@@ -66,10 +67,21 @@ public class Player implements sqdance.sim.Player {
         return strategy.generate_starting_locations(this.d);
     }
     
-    public Point[] play(Point[] dancers, int[] scores, int[] partner_ids, int[] enjoyment_gained) {
+    public Point[] play(Point[] dancers, int[] scores,
+            int[] partner_ids, int[] enjoyment_gained) {
         Point[] instructions;
         playUpdateInformation(dancers, scores, partner_ids, enjoyment_gained);
-        instructions = strategy.play(dancers, scores, partner_ids, enjoyment_gained, soulmate, total_turns-1);
+        if (d <= d2) {
+        instructions = strategy.play(dancers, scores, partner_ids,
+                enjoyment_gained, soulmate, total_turns-1,
+                remainingEnjoyment);
+        } else {
+            instructions = strategy.play(dancers, scores, partner_ids,
+                    enjoyment_gained, soulmate, total_turns-1);
+        }
+        // for(Point p:instructions) {
+        //     System.out.println(p);
+        // }
         return instructions;
     }
 
@@ -93,15 +105,15 @@ public class Player implements sqdance.sim.Player {
                     remainingEnjoyment[i][j] -= enjoyment_gained[i];
                 }
                 relation[i][j]
-                		= relation[j][i] 
-                		= getRelation(enjoyment_gained[i]);
+                        = relation[j][i] 
+                        = getRelation(enjoyment_gained[i]);
                 if(relation[i][j]=='s') {
-                	soulmate[i] = j;
+                    soulmate[i] = j;
                 }
             }
 
             if (getRelation(enjoyment_gained[i]) == 'f') {
-            	friend_pairs_seen++;
+                friend_pairs_seen++;
             }
         }
         
@@ -113,13 +125,13 @@ public class Player implements sqdance.sim.Player {
     }
 
     private char getRelation(int enjoyment) {
-    	switch (enjoyment) {
-	        case 3: return 'x'; // stranger
-	        case 4: return 'f'; // friend
-	        case 6: return 's'; // soulmate
-    	}
-    	
-    	return 0;
+        switch (enjoyment) {
+            case 3: return 'x'; // stranger
+            case 4: return 'f'; // friend
+            case 6: return 's'; // soulmate
+        }
+        
+        return 0;
     }
     private int total_enjoyment(int enjoyment_gained) {
         switch (enjoyment_gained) {

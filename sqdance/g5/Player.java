@@ -27,9 +27,9 @@ public class Player implements sqdance.sim.Player {
 
 		// Decide strategy to apply
 		if (d < D_SMALL) {
-			strategy = OneMoreTimeStrategy.getInstance();
+			strategy = LoveBirdStrategy.getInstance();
 		} else if (d < D_MEDIUM) {
-			strategy = OneMoreTimeStrategy.getInstance();
+			strategy = LoveBirdStrategy.getInstance();
 		} else if (d < D_LARGE) {
 			strategy = OneMoreTimeStrategy.getInstance();
 		} else {
@@ -40,6 +40,7 @@ public class Player implements sqdance.sim.Player {
 	@Override
 	public Point[] generate_starting_locations() {
 		Point[] points = strategy.generateStartLocations(d);
+
 		return points;
 	}
 

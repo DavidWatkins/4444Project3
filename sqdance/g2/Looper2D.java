@@ -128,53 +128,53 @@ public class Looper2D {
     }
     
     public static List<Vector> getCentersBetweenDancers(double m, double n) {
-    	double DISTANCE_BETWEEN_CENTERS = 0.5001;
-    	
-    	List<Vector> centers = new LinkedList<>();
+        double DISTANCE_BETWEEN_CENTERS = 0.5001;
+        
+        List<Vector> centers = new LinkedList<>();
         Vector center = null;
-    	
-    	double currentX = m/2.0;
-    	double currentY = n/2.0;
-    	
-    	int currentState = 0;
-    	Vector[] stateIncrement = {new Vector(0,-DISTANCE_BETWEEN_CENTERS),
-    						      new Vector(DISTANCE_BETWEEN_CENTERS,0),
-    						      new Vector(0,DISTANCE_BETWEEN_CENTERS),
-    						      new Vector(-DISTANCE_BETWEEN_CENTERS,0)};
-    	int numCentersInState = 1;
-    	
-    	while (currentX >= 0 && currentY >= 0 && currentX < m && currentY < n) {
-    		for (int i = 0; i < numCentersInState; ++i) {
+        
+        double currentX = m/2.0;
+        double currentY = n/2.0;
+        
+        int currentState = 0;
+        Vector[] stateIncrement = {new Vector(0,-DISTANCE_BETWEEN_CENTERS),
+                                  new Vector(DISTANCE_BETWEEN_CENTERS,0),
+                                  new Vector(0,DISTANCE_BETWEEN_CENTERS),
+                                  new Vector(-DISTANCE_BETWEEN_CENTERS,0)};
+        int numCentersInState = 1;
+        
+        while (currentX >= 0 && currentY >= 0 && currentX < m && currentY < n) {
+            for (int i = 0; i < numCentersInState; ++i) {
                 center = new Vector(currentX, currentY);
                 center.state = currentState;
-    			centers.add(center);
-    			currentX += stateIncrement[currentState].x;
-    			currentY += stateIncrement[currentState].y;
-    			if (!(currentX >= 0 && currentY >= 0 && currentX < m && currentY < n)) {
-    				// Out of bounds
-    				break;
-    			}
-    		}
-    		
-    		/*
-    		 *  Corner adjustments
-    		 *  1. Move extra half distance
-    		 *  2. Change state
-    		 *  3. Move half distance in new state
-    		 */
-    		currentX += stateIncrement[currentState].x / 2;
-			currentY += stateIncrement[currentState].y / 2;
-    		currentState = (currentState + 1) % stateIncrement.length;
-			numCentersInState++;
-    	}
-    	
-    	return centers;
+                centers.add(center);
+                currentX += stateIncrement[currentState].x;
+                currentY += stateIncrement[currentState].y;
+                if (!(currentX >= 0 && currentY >= 0 && currentX < m && currentY < n)) {
+                    // Out of bounds
+                    break;
+                }
+            }
+            
+            /*
+             *  Corner adjustments
+             *  1. Move extra half distance
+             *  2. Change state
+             *  3. Move half distance in new state
+             */
+            currentX += stateIncrement[currentState].x / 2;
+            currentY += stateIncrement[currentState].y / 2;
+            currentState = (currentState + 1) % stateIncrement.length;
+            numCentersInState++;
+        }
+        
+        return centers;
     }
     
 
     public static void main(String[] args) {
-    	
-    	testCOMLine(5,5);
+        
+        testCOMLine(5,5);
 
         int counter = 0;
         char [][] buf = new char[10][10];
@@ -222,9 +222,9 @@ public class Looper2D {
         // System.out.println(StringUtil.toString(buf, "\n"));
     }
 
-	private static void testCOMLine(int i, int j) {
-		List<Vector> centers = getCentersBetweenDancers(i, j);
-		for (Vector center : centers)
-			System.out.println("(" + center.x + ", " + center.y + ")");
-	}
+    private static void testCOMLine(int i, int j) {
+        List<Vector> centers = getCentersBetweenDancers(i, j);
+        for (Vector center : centers)
+            System.out.println("(" + center.x + ", " + center.y + ")");
+    }
 }

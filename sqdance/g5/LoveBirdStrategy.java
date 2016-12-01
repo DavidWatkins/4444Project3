@@ -28,7 +28,7 @@ public class LoveBirdStrategy implements ShapeStrategy {
 	int count;
 
 	// store known soulmates
-	public List<Integer> honeyMooners;
+	public List<Integer> soulmates;
 
 	Map<Integer, Integer> specialCaresLastTurn = new HashMap<>();
 
@@ -55,7 +55,6 @@ public class LoveBirdStrategy implements ShapeStrategy {
 		this.idToBar = new HashMap<>();
 		this.bars = new ArrayList<>();
 
-		this.honeyMooners = new ArrayList<>();
 		count = 1;
 	}
 
@@ -163,29 +162,161 @@ public class LoveBirdStrategy implements ShapeStrategy {
 	public Point[] nextMove(Point[] dancers, int[] scores, int[] partner_ids, int[] enjoyment_gained) {
 		Point[] result = new Point[dancers.length];
 
-		// Map<Integer, Point> soulmateMoves = getDummySoulmateMoves(dancers, partner_ids, enjoyment_gained);
+		// find all moves that are affected by a soulmate pairing
+		// Map<Integer, Point> soulmateMoves = getSoulmateMoves(dancers,
+		// partner_ids, enjoyment_gained);
+		Map<Integer, Point> soulmateMoves = getDummySoulmateMoves(dancers, partner_ids, enjoyment_gained);
 		/* Disable soulmate movement for now */
-		System.out.println("playing");
+		System.out.println("Soulmate moves: " + soulmateMoves.size());
 
+		// for those soulmates the move is decided
+		for (Integer key : soulmateMoves.keySet()) {
+			// System.out.println("Move: " + key + ": " +
+			// soulmateMoves.get(key).x + ", " + soulmateMoves.get(key).y);
+			result[key] = soulmateMoves.get(key);
+		}
 
+		// When a cycle has completed we perform a swap inside the bar
+		// if (count % SWAP_INTERVAL == 0) {
+		// //System.out.println("Turn " + count + ", swap within bar.");
+		//
+		// result = new Point[dancers.length];
+		//
+		// for (int i = 0; i < dancers.length; i++) {
+		// if (soulmateMoves.containsKey(i))
+		// continue;
+		//
+		// // find the bar this dancer is in
+		// int id = i;
+		// Point dancer = dancers[i];
+		// int barId = idToBar.get(id);
+		// Bar theBar = bars.get(barId);
+		//
+		// // decide how the swapping goes in the bar
+		// Point newLoc = theBar.innerSwap(dancer);
+		//
+		// result[i] = newLoc;
+		// }
+		//
+		// }
+
+		// For every 21 turns we spend 1 turn to move
+		// else
 		if (count % MOVE_INTERVAL == 0) {
-			System.out.println("move soulmates");
-			Map <Integer, Point> soulmateMoves = getSoulmateMoves(dancers, partner_ids, enjoyment_gained);
-			System.out.println("calling soulmates");
-			System.out.println("Soulmate moves: " + soulmateMoves.size());
-			for (Integer key : soulmateMoves.keySet()){
-				result[key] =  soulmateMoves.get(key);
+
+			ArrayList<Pair> pairsOfSpecialCares = findSpecialCares(dancers, scores, partner_ids, enjoyment_gained);
+
+			for (int i = 0; i < pairsOfSpecialCares.size(); i++) {
+				Pair temp = pairsOfSpecialCares.get(i);
+				if (temp == null)
+					continue;
+				for (int k = 0; k < bars.size(); k++) {
+					Point topleft = bars.get(k).topLeft;
+					Point bottomleft = bars.get(k).bottomLeft;
+					if (pairsOfSpecialCares.size() == 0)
+						break;
+					if (pairsOfSpecialCares.get(i).containsPoint(topleft)
+							|| pairsOfSpecialCares.get(i).containsPoint(bottomleft)) {
+						pairsOfSpecialCares.remove(i);
+						i = 0;
+					}
+				}
 			}
-		} 
-		else {
+
+			for (int j = 0; j < pairsOfSpecialCares.size(); j++) {
+				System.out.println(pairsOfSpecialCares.get(j).leftid + "," + pairsOfSpecialCares.get(j).rightid + " ");
+			}
+			System.out.println("aftersize " + pairsOfSpecialCares.size());
+
+			specialCaresLastTurn.clear();
+
+			for (int i = 0; i < pairsOfSpecialCares.size(); i++) {
+				Pair temp = pairsOfSpecialCares.get(i);
+				if (temp == null) {
+					System.out.println("null");
+					continue;
+				}
+				specialCaresLastTurn.put(temp.leftid, temp.leftid);
+				specialCaresLastTurn.put(temp.rightid, temp.rightid);
+			}
+
+			System.out.println();
+			System.out.println(" Map Elements");
+			System.out.print("\t" + specialCaresLastTurn);
+
+			// System.out.println("Turn " + count + ",move.");
+			// move the player with its group
+			result = new Point[dancers.length];
+
+			// System.out.println("heapsize " + specialCaresLastTurn.size());
+			// System.out.println("listsize " + pairsOfSpecialCares.size());
+
+			for (int j = 0; j < pairsOfSpecialCares.size(); j++) {
+
+				// System.out.println(j + pairsOfSpecialCares.get(j).leftid +
+				// "," +
+				// pairsOfSpecialCares.get(j).rightid + " ");
+
+			}
+
+			for (int i = 0; i < dancers.length; i++) {
+
+				if (specialCaresLastTurn.containsKey(i)) {
+					// System.out.println("here1");
+					result[i] = new Point(0, 0);
+					continue;
+				}
+
+				Point dancer = dancers[i];
+				// System.out.format("Dancer before movement: (%f, %f)\n",
+				// dancer.x, dancer.y);
+
+				int id = i;
+				int barId = idToBar.get(id);
+				Bar theBar = bars.get(barId);
+				Point newLoc1 = theBar.move(dancer, id, idToBar);
+
+				Point newLoc2 = new Point(0, 0);
+				Point newLoc3 = new Point(0, 0);
+
+				barId = idToBar.get(id);
+				theBar = bars.get(barId);
+
+				// Jump twice
+				Point next = dancer.add(newLoc1);
+				for (int j = 0; j < pairsOfSpecialCares.size(); j++) {
+					if (pairsOfSpecialCares.get(j).containsPoint(next)) {
+						newLoc2 = theBar.move(next, id, idToBar);
+						break;
+						// System.out.println("here2");
+					}
+				}
+
+				barId = idToBar.get(id);
+				theBar = bars.get(barId);
+
+				Point nextnext = next.add(newLoc2);
+				for (int j = 0; j < pairsOfSpecialCares.size(); j++) {
+					if (pairsOfSpecialCares.get(j).containsPoint(nextnext)) {
+						newLoc3 = theBar.move(nextnext, id, idToBar);
+						break;
+					}
+				}
+
+				result[i] = newLoc1.add(newLoc2.add(newLoc3));
+
+			}
+		} else {
 			result = new Point[dancers.length];
 			for (int i = 0; i < dancers.length; i++) {
+				if (soulmateMoves.containsKey(i))
+					continue;
 				result[i] = new Point(0, 0);
 			}
 		}
 		if (count % MOVE_INTERVAL == 0) {
 			for (int j = 0; j < result.length; j++) {
-				System.out.println(j + ": " + result[j].x + "," + result[j].y);
+				System.out.println(j + " " + result[j].x + "," + result[j].y);
 			}
 		}
 		count++;
@@ -379,119 +510,61 @@ public class LoveBirdStrategy implements ShapeStrategy {
 	// gets the soulmate moves
 	private Map<Integer, Point> getSoulmateMoves(Point[] dancers, int[] partner_ids, int[] enjoyment_gained) {
 		Map<Integer, Point> soulmateMoves = new HashMap<Integer, Point>();
-		List<Pair> soulmates = new ArrayList<Pair>();
-		List<Pair> others = new ArrayList<Pair>();
-		System.out.println("calls function");
-		//group all the pairs as no move, a soulmate with move, or not soulmate
-		for (int i=0; i < dancers.length; i++){
-			Pair couple = new Pair(dancers[i], dancers[partner_ids[i]], 0, i, partner_ids[i]);
-			if (enjoyment_gained[i]==6 && inHoneyMoon(couple)){
-				soulmateMoves.put(i, new Point(0,0));
-			}
-			else if (enjoyment_gained[i]==6 && !soulmates.contains(couple)){
-				boolean added = false;
-				for (Pair p: soulmates){
-					if (p.rightid==i){
-						added = true;
-					}
-				}
-				if (!added)
-					soulmates.add(couple);
-			}
-			else if (!soulmates.contains(partner_ids[i]) && !others.contains(couple)){
-				others.add(couple);
-			}
-		}
-		System.out.println("number of soulmates is"+soulmates.size());
-		List<Pair> movable = new ArrayList<Pair>();
-		List<Pair> immovable = new ArrayList<Pair>();
-	//sets moves of all soulmates and decides if it's moving or not
-		for (int i = 0; i < soulmates.size(); i++){
-			Pair curr = soulmates.get(i);
-			if (isMovable(curr, others)){
-				Map<Integer, Point> temp = bars.get(idToBar.get(i)).doSoulmateMove(curr, idToBar);
-				soulmateMoves.putAll(temp);//DO SOULMATE MOVE //update honeymoon suite
-				System.out.println(temp.size());
-				if (soulmateMoves.containsKey(-1)){
-					soulmateMoves.remove(-1);
-					honeyMooners.add(curr.leftid);
-					honeyMooners.add(curr.rightid);
-				}
-				movable.add(curr);
+		int[] nextPair = { -1, -1 }; // presets the next found soulmate to not
+										// found
+
+		// loops through already known soulmates to check that they are at the
+		// bottom of the bar
+		boolean allSet = true;
+		for (int i = 0; i < soulmates.size(); i++) {
+			int danceID = soulmates.get(i);
+			Bar theBar = bars.get(idToBar.get(danceID));
+			if (theBar.inPlace(dancers[danceID])) { // in place checks that
+													// they're under the bottom
+				soulmateMoves.put(danceID, new Point(0, 0));
 			} else {
-				soulmateMoves.put(curr.leftid, new Point(0,0));
-				soulmateMoves.put(curr.rightid, new Point(0,0));
-				immovable.add(curr);
+				allSet = false;
 			}
 		}
-		System.out.println(dancers.length);
-		for (int i =0; i < dancers.length; i++){
-			Point finalLoc = null;
-			int barId = idToBar.get(i);
-			Bar theBar = bars.get(barId);
-			if (soulmateMoves.isEmpty() || !soulmateMoves.containsKey(i)){
-				Point newLoc = theBar.move(dancers[i], i, idToBar);
-				barId = idToBar.get(i); //barid after 1 move
 
-				Point next = dancers[i].add(newLoc);
-				for (int j=0; j<immovable.size(); j++){
-					if (immovable.get(j).containsPoint(next)){
-						//go to the right
+		// allSet false means currently moving a pair down so ignor any new
+		// soulmates, true means time to check for a new pair
+		if (allSet) {
+			boolean newPair = false;
+			for (int i = 0; i < dancers.length; i++) {
+				// loops through dancers, if enjoyment is 6, with a soulmate
+				if (enjoyment_gained[i] == 6 && !soulmates.contains(i)) {
+					// picks the first pair it finds and doesn't over ride
+					if (!newPair) {
+						newPair = true;
+						nextPair[0] = i;
+						nextPair[1] = partner_ids[i];
+						soulmates.add(i);
+						soulmates.add(partner_ids[i]);
 					}
-				}
-				boolean spot1 = false;
-				boolean spot2 = false;
-				int barid1, barid2;
-				if (finalLoc==null){
-					finalLoc = newLoc; //just 1 forward, next is that position
-					Point newLoc2 = theBar.move(next, i, idToBar);
-					barid1 = idToBar.get(i);
-					Point nextnext = next.add(newLoc2); //position of 2 spots over
-					Point newLoc3 = theBar.move(nextnext, i, idToBar);
-					barid2 = idToBar.get(i); //bar id after 2 moves
-					for (int j=0; j<movable.size(); j++){
-						if (movable.get(j).containsPoint(next))
-							spot1 = true;
-						if (movable.get(j).containsPoint(nextnext))
-							spot2 = true;
-					}
-					if (spot1){
-						finalLoc = finalLoc.add(newLoc2);
-						if(spot2){
-							finalLoc = finalLoc.add(newLoc3);
-							idToBar.put(i,barid2);
-						}
-
-					}			
-					
 				}
 			}
-			soulmateMoves.put(i, finalLoc);
 		}
-		System.out.println("returns moves");
+		// continues following the already found soulmate pair since it is not
+		// at the bottom
+		else if (soulmates.size() > 0) {
+			nextPair[0] = soulmates.get(soulmates.size() - 2);
+			nextPair[1] = soulmates.get(soulmates.size() - 1);
+		}
+
+		// System.out.print("Next pair: " + nextPair[0] + ", " + nextPair[1]);
+		if (nextPair[0] >= 0 && nextPair[1] >= 0) {
+			// prints current location of pair
+			// System.out.print("(" + dancers[nextPair[0]].x + ", " +
+			// dancers[nextPair[0]].y + ")");
+			// System.out.println("(" + dancers[nextPair[1]].x + ", " +
+			// dancers[nextPair[1]].y + ")");
+			Bar theBar = bars.get(idToBar.get(nextPair[0]));
+			soulmateMoves.putAll(theBar.doSoulmateMove(dancers, nextPair[0], nextPair[1])); // moves
+																							// //
+																							// involved
+		}
 		return soulmateMoves;
 	}
-
-	public boolean inHoneyMoon(Pair p){
-		return (honeyMooners.contains(p.leftid) && honeyMooners.contains(p.rightid));
-	}
-
-	public boolean isMovable(Pair p, List<Pair> singles){
-		// Point left = p.leftdancer;
-		// int barId = idToBar.get(p.leftid);
-		// Bar theBar = bars.get(barId);
-
-		// boolean movable = false;
-		// Point oneup = left.add(theBar.move(left, p.leftid, idToBar)); //CHECK THIS MOTION
-		// Point twoup = oneup.add(theBar.move(oneup, p.leftid, idToBar));
-		// idToBar.put(p.leftid, barId);
-		// for (int i =0; i < singles.size(); i++)
-		// 	if (singles.get(i).containsPoint(oneup)||singles.get(i).containsPoint(twoup))
-		// 		movable = true;
-	
-		// return movable;
-		return true;
-	}
-
 
 }

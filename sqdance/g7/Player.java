@@ -5,7 +5,14 @@ import sqdance.sim.Point;
 import java.io.*;
 import java.util.Random;
 import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
+import java.util.List;
+
+import static java.util.Comparator.comparing;
 
 public class Player implements sqdance.sim.Player {
 
@@ -26,8 +33,10 @@ public class Player implements sqdance.sim.Player {
 	private Belt belt;
 
 	
-	private static  int NUM_DANCE_TURNS = 1; // Only use (1,2,5,10)-1
+	private static  int NUM_DANCE_TURNS = 4; // Only use (1,2,5,10)-1
 	
+	private static int lowestDancers = -1;
+
 	private int danceTurn;
 
 	// init function called once with simulation parameters before anything else is called
@@ -57,6 +66,8 @@ public class Player implements sqdance.sim.Player {
 		for(int i=0; i<d; i++){
 			L[i] = belt.getPosition(belt.dancerList.get(i).beltIndex);
 		}
+		lowestDancers = belt.recommendedLowestDancerNumber;
+		
 		return L;
 	}
     
@@ -67,12 +78,32 @@ public class Player implements sqdance.sim.Player {
 	// partner_ids: index of the current dance partner. -1 if no dance partner
 	// enjoyment_gained: integer amount (-5,0,3,4, or 6) of enjoyment gained in the most recent 6-second interval
 	
+	public static int[] bottomIndices(final int[] input, final int n){
+		return IntStream.range(0,input.length).boxed()
+				.sorted(comparing(i->input[i])).mapToInt(i -> i)
+				.limit(n).toArray();			
+	}
+	
 	public Point[] play(Point[] dancers, int[] scores, int[] partner_ids, int[] enjoyment_gained) {
+		
+		//System.out.println(Arrays.toString(bottomIndices(scores,scores.length/10)));
+		
+		
 		Point[] instructions = new Point[d];	
 		for(int i=0; i<d; i++)
 			instructions[i] = new Point(0,0);
 
 		if(danceTurn == 0){
+			int[] lowestScorers = bottomIndices(scores,lowestDancers);
+			List<Integer> lowScorerList = IntStream.of(lowestScorers).boxed().collect(Collectors.toList());
+			for(Dancer d : belt.dancerList){
+				if(lowScorerList.contains(d.dancerId))
+					d.isLowerScorer=true;
+				else
+					d.isLowerScorer=false;
+			}
+			
+			
 			//System.out.println("MOVE");
 			setEveryoneToDance();	// Set everyone's status to be "WILL_Dance" (was dancing)
 			Set<Integer> curDancers = getCurDancers(enjoyment_gained);

@@ -64,14 +64,10 @@ public class ConveyorPlayer implements sqdance.sim.Player {
                         conveyor_rows[i*DANCERS_PER_CONVEYOR + k][j] = new Point(gridX + (k*(GRID_GAP/DANCERS_PER_CONVEYOR)), gridY);
                     }
                 } else {
-
                     double gridX = GRID_OFFSET_X + i * GRID_GAP;
                     double gridY = GRID_OFFSET_Y + j * GRID_GAP;
                     if ((i % 2) == 1) {
                         gridX -= 0.00001;
-                    }
-                    if (j == gridRows - 1) {
-                        gridY += 0.1;
                     }
                     grid[i][j] = new Point(gridX, gridY);
                 }
@@ -117,6 +113,22 @@ public class ConveyorPlayer implements sqdance.sim.Player {
 
         // time to dance and collect points and data
         if (mode == 0) {
+            // DEBUG
+            System.out.println("Turncounter = " + play_counter);
+            boolean foundBad = false;
+            for (int i = 0; i < enjoyment_gained.length; i++) {
+                if(enjoyment_gained[i] < 0) {
+                    foundBad = true;
+                    int currBad = snakeDancers.indexOf(i);
+                    double badX = snake[currBad].x;
+                    double badY = snake[currBad].y;
+                    double actualX = dancers[i].x;
+                    double actualY = dancers[i].y;
+                    System.out.println("Bad dancer: " + i + " at (" + badX + ", " + badY + "). ACTUAL: (" + actualX + ", " + actualY + ")");
+                }
+            }
+            
+
             if (play_counter <= 10) {
                 play_counter += 1;
                 return instructions;
@@ -127,35 +139,37 @@ public class ConveyorPlayer implements sqdance.sim.Player {
             return instructions;
         }
 
-        // snake along and update destinations
-        List<Integer> newSnakeDancers = new ArrayList<Integer>();
-        newSnakeDancers.add(snakeDancers.get(0));
-        int curr = snakeDancers.get(snakeDancers.size() - 1); // move last one to beginning
-        destinations[curr] = snake[0];
-        newSnakeDancers.add(curr);
-        for (int i = 1; i < snakeDancers.size()-1; i++) {
+
+
+        /* snake along and update destinations
+           The snakeDancers List is a mapping from snake indicies to dancers. 
+           The index of snakeDancers contains the dancer at that index in the 
+           snake. 
+           
+           Example: snakeDancers.get(42) returns the index in snake where 
+           the dancer id 42 is. If snakeDancers.get(42) returns 5, then 
+           snake[5] contains the *position* on the grid where dancer 42 
+           should be.
+           
+           The snakeDancers List must be updated every time dancers move
+         */
+        List<Integer> newSnakeDancers = new ArrayList<Integer>(); // new mapping for snake indexes to dancers
+        int curr = snakeDancers.get(snakeDancers.size() - 1); // get the dancer id of the dancer at the end of snake
+        destinations[curr] = snake[0]; // make that dancer move from end position of snake to beginning position of snake
+        newSnakeDancers.add(curr); // begin updating snakeDancers to reflect the new snake mappings
+        for (int i = 0; i < snakeDancers.size()-1; i++) {
             curr = snakeDancers.get(i);
-            int nextPosInSnake = (i + 1) % snakeDancers.size();
+            int nextPosInSnake = i + 1;
             destinations[curr] = snake[nextPosInSnake];
             newSnakeDancers.add(curr);
         }
-        destinations[0] = new Point(0.1, 0.1);
         snakeDancers = newSnakeDancers;
 
         for (int i = 0; i < d; ++ i) {
-            instructions[i] = direction(subtract(destinations[i], dancers[i]));
+            instructions[i] = getVector(destinations[i], dancers[i]);            
         }
 
-        // DEBUG
-        // for (int i = 0; i < scores.length; i++) {
-        //     if(scores[i] < 0) {
-        //         System.out.println("Bad dancer: " + i);
-        //     }
-        // }
 
-        // DEBUG
-        // System.out.println("Dancer 0: " + instructions[0].x + " " + instructions[0].y);
-        // System.out.println("Dancer 2: " + instructions[1].x + " " + instructions[1].y);
 
         mode = 0; // dance next turn
         return instructions;        
@@ -232,10 +246,12 @@ public class ConveyorPlayer implements sqdance.sim.Player {
         return Math.hypot(a.x - b.x, a.y - b.y);
     }
 
-    private Point direction(Point a) {
-        double l = Math.hypot(a.x, a.y);
-        if (l <= 1 + 1e-8) return a;
-        else return new Point(a.x / l, a.y / l);
-    }
-    
+    private Point getVector(Point a, Point b) {
+        Point diff = new Point(a.x - b.x, a.y - b.y);
+        double hypot = Math.hypot(diff.x, diff.y);
+        if (hypot >= 1.999) {
+            diff = new Point(diff.x/hypot * 1.999, diff.y/hypot * 1.999);
+        }
+        return diff;
+    }    
 }

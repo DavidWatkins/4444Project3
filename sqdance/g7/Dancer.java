@@ -21,6 +21,7 @@ public class Dancer {
 	Map<Integer, Integer> strangerToTime;
 	int soulMate = -1;
 	
+	boolean isLowerScorer = false;
 	
 	public Dancer(int dancerId, int beltIndex){
 		friendToTime = new HashMap<Integer,Integer>();
@@ -45,9 +46,15 @@ public class Dancer {
 		if(dancerStatus==WILL_MOVE || dancerStatus == UNDETERMINED)//Was moving
 			dancerStatus=WILL_DANCE;
 		else if(dancerStatus==WILL_DANCE){
-			if(friendToTime.containsKey(partnerDanceId)){ //Partner is a friend
+			if(partnerDanceId == soulMate){ //Partner is a soulmate
+				if(isLowerScorer)
+					dancerStatus = WILL_DANCE;
+				else
+					dancerStatus = WILL_MOVE;
+			}
+			else if(friendToTime.containsKey(partnerDanceId)){ //Partner is a friend
 				//System.out.println(friendToTime.get(partnerDanceId));
-				if(friendToTime.get(partnerDanceId) < 196) {//You're not bored of this friend
+				if(isLowerScorer && friendToTime.get(partnerDanceId) < 196) {//You're not bored of this friend
 					dancerStatus=WILL_DANCE; //Keep dancing
 				} else {
 					dancerStatus=WILL_MOVE;	//Move

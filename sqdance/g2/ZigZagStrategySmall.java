@@ -5,7 +5,7 @@ import java.util.HashMap;
 import sqdance.sim.Point;
 
 public class ZigZagStrategySmall implements Strategy {
-	private static final double EPSILON = 0.00001;
+	private static final double EPSILON = 0.00000001;
 	private static final double DISTANCE_BETWEEN_DANCERS = 0.51;
 	
 	//TODO: Set actual number (how many dancers are in each row)
@@ -36,6 +36,14 @@ public class ZigZagStrategySmall implements Strategy {
 			double dy = locations[i].y - locations[d-i-1].y;
 			System.out.println("dist " + Math.sqrt(dx*dx + dy*dy));
 			final_positions[d - i - 1] = locations[d - i - 1];
+			/*if(dir < 0) {
+				Point pos = locations[i];
+				locations[i] = new Point(locations[i].x, locations[d-1-i].y);
+				locations[d-1-i] = new Point(locations[d-1-i].x, pos.y);
+				final_positions[i] = locations[i];
+				final_positions[d-1-i] = locations[d-1-i];
+				
+			}*/
 			if((i+1) % DANCERS_IN_A_LINE == 0) {
 				dir = -dir;
 				current = new Point(current.x, current.y + 2*offy + 2*EPSILON);
@@ -55,7 +63,8 @@ public class ZigZagStrategySmall implements Strategy {
     		int[] partner_ids,
     		int[] enjoyment_gained,
     		int[] soulmate,
-    		int current_turn) {
+    		int current_turn,
+    		int[][] remainingEnjoyment) {
     	int d = scores.length;
     	Point[] instructions = new Point[d];
     	
@@ -135,19 +144,26 @@ public class ZigZagStrategySmall implements Strategy {
     	}
     }
     
+    @Override
+	public Point[] play(Point[] dancers, int[] scores,
+			int[] partner_ids, int[] enjoyment_gained,
+			int[] soulmate, int current_turn) {
+    	return null;
+    }
     //increment current turn after everyone is done dancing with strangers/friends
     //for medium d
     //for small d just increment it every turn
     @Override
 	public Point[] play(Point[] dancers, int[] scores,
 			int[] partner_ids, int[] enjoyment_gained,
-			int[] soulmate, int current_turn) {
+			int[] soulmate, int current_turn, int[][] remainingEnjoyment) {
 		
 		return playSmallD(dancers,
 	    		scores,
 	    		partner_ids,
 	    		enjoyment_gained,
 	    		soulmate,
-	    		current_turn);
+	    		current_turn,
+	    		remainingEnjoyment);
 	}
 }
