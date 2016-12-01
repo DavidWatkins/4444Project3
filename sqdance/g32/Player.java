@@ -1,4 +1,4 @@
-package sqdance.g3;
+package sqdance.g32;
 
 import sqdance.sim.Point;
 import java.util.*;
